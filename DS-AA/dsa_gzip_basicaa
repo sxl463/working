@@ -1,0 +1,200 @@
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//164.gzip.bc
+===== Alias Analysis Evaluator Report =====
+  78000 Total Alias Queries Performed
+  64813 no alias responses (83.0%)
+  8259 may alias responses (10.5%)
+  4663 partial alias responses (5.9%)
+  265 must alias responses (0.3%)
+  Alias Analysis Evaluator Pointer Alias Summary: 83%/10%/5%/0%
+  31717 Total ModRef Queries Performed
+  6591 no mod/ref responses (20.7%)
+  328 mod responses (1.0%)
+  19731 ref responses (62.2%)
+  5067 mod & ref responses (15.9%)
+  Alias Analysis Evaluator Mod/Ref Summary: 20%/1%/62%/15%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//bits.bc
+===== Alias Analysis Evaluator Report =====
+  125 Total Alias Queries Performed
+  97 no alias responses (77.6%)
+  2 may alias responses (1.6%)
+  26 partial alias responses (20.8%)
+  0 must alias responses (0.0%)
+  Alias Analysis Evaluator Pointer Alias Summary: 77%/1%/20%/0%
+  148 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  110 ref responses (74.3%)
+  38 mod & ref responses (25.6%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/74%/25%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//deflate.bc
+===== Alias Analysis Evaluator Report =====
+  2092 Total Alias Queries Performed
+  1417 no alias responses (67.7%)
+  426 may alias responses (20.3%)
+  236 partial alias responses (11.2%)
+  13 must alias responses (0.6%)
+  Alias Analysis Evaluator Pointer Alias Summary: 67%/20%/11%/0%
+  880 Total ModRef Queries Performed
+  45 no mod/ref responses (5.1%)
+  4 mod responses (0.4%)
+  643 ref responses (73.0%)
+  188 mod & ref responses (21.3%)
+  Alias Analysis Evaluator Mod/Ref Summary: 5%/0%/73%/21%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//getopt.bc
+===== Alias Analysis Evaluator Report =====
+  Alias Analysis Evaluator Summary: No pointers!
+  Alias Analysis Mod/Ref Evaluator Summary: no mod/ref!
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//gzip.bc
+===== Alias Analysis Evaluator Report =====
+  3625 Total Alias Queries Performed
+  3378 no alias responses (93.1%)
+  66 may alias responses (1.8%)
+  171 partial alias responses (4.7%)
+  10 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 93%/1%/4%/0%
+  4732 Total ModRef Queries Performed
+  234 no mod/ref responses (4.9%)
+  0 mod responses (0.0%)
+  3321 ref responses (70.1%)
+  1177 mod & ref responses (24.8%)
+  Alias Analysis Evaluator Mod/Ref Summary: 4%/0%/70%/24%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//inflate.bc
+===== Alias Analysis Evaluator Report =====
+  32276 Total Alias Queries Performed
+  28760 no alias responses (89.1%)
+  2670 may alias responses (8.2%)
+  695 partial alias responses (2.1%)
+  151 must alias responses (0.4%)
+  Alias Analysis Evaluator Pointer Alias Summary: 89%/8%/2%/0%
+  7241 Total ModRef Queries Performed
+  3160 no mod/ref responses (43.6%)
+  19 mod responses (0.2%)
+  3500 ref responses (48.3%)
+  562 mod & ref responses (7.7%)
+  Alias Analysis Evaluator Mod/Ref Summary: 43%/0%/48%/7%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//lzw.bc
+===== Alias Analysis Evaluator Report =====
+  10 Total Alias Queries Performed
+  10 no alias responses (100.0%)
+  0 may alias responses (0.0%)
+  0 partial alias responses (0.0%)
+  0 must alias responses (0.0%)
+  Alias Analysis Evaluator Pointer Alias Summary: 100%/0%/0%/0%
+  5 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  5 ref responses (100.0%)
+  0 mod & ref responses (0.0%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/100%/0%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//spec.bc
+===== Alias Analysis Evaluator Report =====
+  3084 Total Alias Queries Performed
+  2880 no alias responses (93.3%)
+  113 may alias responses (3.6%)
+  80 partial alias responses (2.5%)
+  11 must alias responses (0.3%)
+  Alias Analysis Evaluator Pointer Alias Summary: 93%/3%/2%/0%
+  5430 Total ModRef Queries Performed
+  733 no mod/ref responses (13.4%)
+  201 mod responses (3.7%)
+  3076 ref responses (56.6%)
+  1420 mod & ref responses (26.1%)
+  Alias Analysis Evaluator Mod/Ref Summary: 13%/3%/56%/26%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//trees.bc
+===== Alias Analysis Evaluator Report =====
+  10593 Total Alias Queries Performed
+  9358 no alias responses (88.3%)
+  285 may alias responses (2.6%)
+  937 partial alias responses (8.8%)
+  13 must alias responses (0.1%)
+  Alias Analysis Evaluator Pointer Alias Summary: 88%/2%/8%/0%
+  2844 Total ModRef Queries Performed
+  707 no mod/ref responses (24.8%)
+  16 mod responses (0.5%)
+  1745 ref responses (61.3%)
+  376 mod & ref responses (13.2%)
+  Alias Analysis Evaluator Mod/Ref Summary: 24%/0%/61%/13%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//unlzh.bc
+===== Alias Analysis Evaluator Report =====
+  6045 Total Alias Queries Performed
+  5081 no alias responses (84.0%)
+  177 may alias responses (2.9%)
+  769 partial alias responses (12.7%)
+  18 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 84%/2%/12%/0%
+  2393 Total ModRef Queries Performed
+  908 no mod/ref responses (37.9%)
+  57 mod responses (2.3%)
+  1226 ref responses (51.2%)
+  202 mod & ref responses (8.4%)
+  Alias Analysis Evaluator Mod/Ref Summary: 37%/2%/51%/8%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//unlzw.bc
+===== Alias Analysis Evaluator Report =====
+  5151 Total Alias Queries Performed
+  4294 no alias responses (83.3%)
+  73 may alias responses (1.4%)
+  769 partial alias responses (14.9%)
+  15 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 83%/1%/14%/0%
+  1610 Total ModRef Queries Performed
+  390 no mod/ref responses (24.2%)
+  40 mod responses (2.4%)
+  1090 ref responses (67.7%)
+  90 mod & ref responses (5.5%)
+  Alias Analysis Evaluator Mod/Ref Summary: 24%/2%/67%/5%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//unpack.bc
+===== Alias Analysis Evaluator Report =====
+  5565 Total Alias Queries Performed
+  4126 no alias responses (74.1%)
+  1084 may alias responses (19.4%)
+  343 partial alias responses (6.1%)
+  12 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 74%/19%/6%/0%
+  1666 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  1484 ref responses (89.0%)
+  182 mod & ref responses (10.9%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/89%/10%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//unzip.bc
+===== Alias Analysis Evaluator Report =====
+  2356 Total Alias Queries Performed
+  2216 no alias responses (94.0%)
+  15 may alias responses (0.6%)
+  120 partial alias responses (5.0%)
+  5 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 94%/0%/5%/0%
+  1425 Total ModRef Queries Performed
+  153 no mod/ref responses (10.7%)
+  0 mod responses (0.0%)
+  994 ref responses (69.7%)
+  278 mod & ref responses (19.5%)
+  Alias Analysis Evaluator Mod/Ref Summary: 10%/0%/69%/19%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//util.bc
+===== Alias Analysis Evaluator Report =====
+  6288 Total Alias Queries Performed
+  3832 no alias responses (60.9%)
+  2143 may alias responses (34.0%)
+  296 partial alias responses (4.7%)
+  17 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 60%/34%/4%/0%
+  2305 Total ModRef Queries Performed
+  94 no mod/ref responses (4.0%)
+  0 mod responses (0.0%)
+  1899 ref responses (82.3%)
+  312 mod & ref responses (13.5%)
+  Alias Analysis Evaluator Mod/Ref Summary: 4%/0%/82%/13%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/164.gzip/src//zip.bc
+===== Alias Analysis Evaluator Report =====
+  790 Total Alias Queries Performed
+  567 no alias responses (71.7%)
+  2 may alias responses (0.2%)
+  221 partial alias responses (27.9%)
+  0 must alias responses (0.0%)
+  Alias Analysis Evaluator Pointer Alias Summary: 71%/0%/27%/0%
+  1038 Total ModRef Queries Performed
+  4 no mod/ref responses (0.3%)
+  0 mod responses (0.0%)
+  726 ref responses (69.9%)
+  308 mod & ref responses (29.6%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/69%/29%

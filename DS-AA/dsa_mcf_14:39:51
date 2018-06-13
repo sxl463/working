@@ -1,0 +1,7 @@
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -basicaa -aa-eval -disable-output example1.bc/*.bc
+Error opening './ds_aa.so': lib/sos/DSAA.a: undefined symbol: _ZN4llvm13AliasAnalysis14getArgLocationENS_17ImmutableCallSiteEjRNS0_12ModRefResultE
+  -load request ignored.
+opt: Unknown command line argument '-dsa-aa'.  Try: 'opt -help'
+opt: Did you mean '-no-aa'?
+opt: Unknown command line argument '-enable-type-inference-opts'.  Try: 'opt -help'
+opt: Did you mean '-enable-objc-arc-opts'?

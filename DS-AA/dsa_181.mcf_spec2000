@@ -1,0 +1,153 @@
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//181.mcf.bc
+===== Alias Analysis Evaluator Report =====
+  47330 Total Alias Queries Performed
+  13466 no alias responses (28.4%)
+  33752 may alias responses (71.3%)
+  0 partial alias responses (0.0%)
+  112 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 28%/71%/0%/0%
+  6552 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  5624 ref responses (85.8%)
+  928 mod & ref responses (14.1%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/85%/14%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//implicit.bc
+===== Alias Analysis Evaluator Report =====
+  16658 Total Alias Queries Performed
+  11966 no alias responses (71.8%)
+  4660 may alias responses (27.9%)
+  0 partial alias responses (0.0%)
+  32 must alias responses (0.1%)
+  Alias Analysis Evaluator Pointer Alias Summary: 71%/27%/0%/0%
+  876 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  856 ref responses (97.7%)
+  20 mod & ref responses (2.2%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/97%/2%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//mcf.bc
+===== Alias Analysis Evaluator Report =====
+  181 Total Alias Queries Performed
+  170 no alias responses (93.9%)
+  10 may alias responses (5.5%)
+  0 partial alias responses (0.0%)
+  1 must alias responses (0.5%)
+  Alias Analysis Evaluator Pointer Alias Summary: 93%/5%/0%/0%
+  702 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  372 ref responses (52.9%)
+  330 mod & ref responses (47.0%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/52%/47%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//mcfutil.bc
+===== Alias Analysis Evaluator Report =====
+  14083 Total Alias Queries Performed
+  8932 no alias responses (63.4%)
+  5115 may alias responses (36.3%)
+  0 partial alias responses (0.0%)
+  36 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 63%/36%/0%/0%
+  1929 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  1693 ref responses (87.7%)
+  236 mod & ref responses (12.2%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/87%/12%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//output.bc
+===== Alias Analysis Evaluator Report =====
+  666 Total Alias Queries Performed
+  553 no alias responses (83.0%)
+  111 may alias responses (16.6%)
+  0 partial alias responses (0.0%)
+  2 must alias responses (0.3%)
+  Alias Analysis Evaluator Pointer Alias Summary: 83%/16%/0%/0%
+  301 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  259 ref responses (86.0%)
+  42 mod & ref responses (13.9%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/86%/13%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//pbeampp.bc
+===== Alias Analysis Evaluator Report =====
+  1952 Total Alias Queries Performed
+  1651 no alias responses (84.5%)
+  292 may alias responses (14.9%)
+  0 partial alias responses (0.0%)
+  9 must alias responses (0.4%)
+  Alias Analysis Evaluator Pointer Alias Summary: 84%/14%/0%/0%
+  75 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  75 ref responses (100.0%)
+  0 mod & ref responses (0.0%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/100%/0%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//pbla.bc
+===== Alias Analysis Evaluator Report =====
+  780 Total Alias Queries Performed
+  182 no alias responses (23.3%)
+  598 may alias responses (76.6%)
+  0 partial alias responses (0.0%)
+  0 must alias responses (0.0%)
+  Alias Analysis Evaluator Pointer Alias Summary: 23%/76%/0%/0%
+  Alias Analysis Mod/Ref Evaluator Summary: no mod/ref!
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//pflowup.bc
+===== Alias Analysis Evaluator Report =====
+  78 Total Alias Queries Performed
+  54 no alias responses (69.2%)
+  24 may alias responses (30.7%)
+  0 partial alias responses (0.0%)
+  0 must alias responses (0.0%)
+  Alias Analysis Evaluator Pointer Alias Summary: 69%/30%/0%/0%
+  Alias Analysis Mod/Ref Evaluator Summary: no mod/ref!
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//psimplex.bc
+===== Alias Analysis Evaluator Report =====
+  820 Total Alias Queries Performed
+  753 no alias responses (91.8%)
+  61 may alias responses (7.4%)
+  0 partial alias responses (0.0%)
+  6 must alias responses (0.7%)
+  Alias Analysis Evaluator Pointer Alias Summary: 91%/7%/0%/0%
+  500 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  410 ref responses (82.0%)
+  90 mod & ref responses (18.0%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/82%/18%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//pstart.bc
+===== Alias Analysis Evaluator Report =====
+  2346 Total Alias Queries Performed
+  1879 no alias responses (80.0%)
+  461 may alias responses (19.6%)
+  0 partial alias responses (0.0%)
+  6 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 80%/19%/0%/0%
+  69 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  69 ref responses (100.0%)
+  0 mod & ref responses (0.0%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/100%/0%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//readmin.bc
+===== Alias Analysis Evaluator Report =====
+  7875 Total Alias Queries Performed
+  3472 no alias responses (44.0%)
+  4384 may alias responses (55.6%)
+  0 partial alias responses (0.0%)
+  19 must alias responses (0.2%)
+  Alias Analysis Evaluator Pointer Alias Summary: 44%/55%/0%/0%
+  2100 Total ModRef Queries Performed
+  0 no mod/ref responses (0.0%)
+  0 mod responses (0.0%)
+  1890 ref responses (90.0%)
+  210 mod & ref responses (10.0%)
+  Alias Analysis Evaluator Mod/Ref Summary: 0%/0%/90%/10%
+opt -load ./ds_aa.so -dsa-aa -enable-type-inference-opts -aa-eval -disable-output /home/zhiyuan/codeblocks/benchmark/cpu2000/CINT2000/181.mcf/src//treeup.bc
+===== Alias Analysis Evaluator Report =====
+  1891 Total Alias Queries Performed
+  1441 no alias responses (76.2%)
+  449 may alias responses (23.7%)
+  0 partial alias responses (0.0%)
+  1 must alias responses (0.0%)
+  Alias Analysis Evaluator Pointer Alias Summary: 76%/23%/0%/0%
+  Alias Analysis Mod/Ref Evaluator Summary: no mod/ref!
