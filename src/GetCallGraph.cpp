@@ -96,15 +96,30 @@ static set<string> existedFiles;
 
 set<Type*> existedTypes;
 
+
+bool isInt8PointerTy(Type* ty){
+  if(PointerType *PT = dyn_cast<PointerType>(ty))
+    if (IntegerType *IT = dyn_cast<IntegerType>(PT->getPointerElementType()))
+      if (IT->getBitWidth() == 8)
+	return true;
+
+  return false;
+}
+
+
+
 int getComplexity(Type* ty){
 
-  errs() << "getComplexity ty: " << *ty << "\n"; 
+  //  errs() << "getComplexity ty: " << *ty << "\n"; 
 
   if(ty->isPointerTy() || ty->isStructTy()){
     //if this type is already existed, which means we have a recursive type
-    if(existedTypes.find(ty) != existedTypes.end()){
-      errs() << "existed type found: " << **existedTypes.find(ty) << "\n";
+    if(existedTypes.find(ty) != existedTypes.end() &&
+       !isInt8PointerTy(ty)){
+      //     errs() << "existedTypes: " << existedTypes.size() << "\n";
+      //  errs() << "existed type found: " << **existedTypes.find(ty) << "\n";
       existedTypes.clear();
+      // errs() << "after clear, existedTypes: " << existedTypes.size() << "\n";
       return 1000;
     }
     existedTypes.insert(ty);
@@ -129,7 +144,7 @@ int getComplexity(Type* ty){
       }
     }
 
-    errs() << "1+getContainedType: " << *ty->getContainedType(0) << "\n";
+    //    errs() << "1+getContainedType: " << *ty->getContainedType(0) << "\n";
     return 1 + getComplexity(ty->getContainedType(0));
   }
   if (ty->isFunctionTy()){
@@ -154,9 +169,9 @@ float computeEdgeComplexity(Function* F){
   float ret;
   int NumFields;
 
-  errs() << "F->ReturnType: " << *F->getReturnType() <<"\n";
-  errs() << "call func: " << F->getName() << "args: " << F->getArgumentList().size() << "\n";
-
+  //  errs() << "F->ReturnType: " << *F->getReturnType() <<"\n";
+  // errs() << "call func: " << F->getName() << "args: " << F->getArgumentList().size() << "\n";
+  ret = getComplexity(F->getReturnType());
   for (auto& A : F->getArgumentList()){
     ret += getComplexity(A.getType()); 
   }
@@ -283,7 +298,7 @@ struct GetCallGraph : public ModulePass {
 	    if (callee->isDeclaration() || callee->isIntrinsic())
 	      continue;
 		
-	    errs() << "getCalledFunction: " << CI->getCalledFunction()->getName() << "\n";
+	    //	    errs() << "getCalledFunction: " << CI->getCalledFunction()->getName() << "\n";
 	    // CallPair cp(F.getName(), CI->getCalledFunction()->getName());
 	    CallEdge ce(F.getName(), CI->getCalledFunction()->getName(), 0);
 	    bool inCG = false;
@@ -293,11 +308,12 @@ struct GetCallGraph : public ModulePass {
 		break;
 	      }
 	    }
-	    if (!inCG)
+	    if (!inCG){
 	      CG.push_back(ce);
 
-	    float complexity = computeEdgeComplexity(CI->getCalledFunction());
-	    errs() << "CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << complexity << "\n";  
+	      float complexity = computeEdgeComplexity(CI->getCalledFunction());
+	      errs() << "CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << complexity << "\n"; 
+	    } 
 	  }
 	}
       }
@@ -313,7 +329,7 @@ struct GetCallGraph : public ModulePass {
       for (auto& E : CG){
 	if (P.caller == E.caller && P.callee == E.callee){
 	  E.call_times++;
-	  errs() << "Found runtime call " << E.caller << " " << E.callee << "\n";
+	  //	  errs() << "Found runtime call " << E.caller << " " << E.callee << "\n";
 	}
       }
     }
