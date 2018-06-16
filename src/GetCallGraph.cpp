@@ -59,10 +59,11 @@ public:
   int call_times;
   float type_complexity;
 
-  CallEdge(string _caller, string _callee, int _call_times){
+  CallEdge(string _caller, string _callee, int _call_times, float _type_complexity){
     caller = _caller;
     callee = _callee;
     call_times = _call_times;
+    type_complexity = _type_complexity;
   }
 };
 
@@ -94,6 +95,7 @@ using namespace llvm;
 
 static set<string> existedFiles;
 
+int NumFields = 0;
 set<Type*> existedTypes;
 
 
@@ -106,10 +108,9 @@ bool isInt8PointerTy(Type* ty){
   return false;
 }
 
-
-
 int getComplexity(Type* ty){
 
+  NumFields++;
   //  errs() << "getComplexity ty: " << *ty << "\n"; 
 
   if(ty->isPointerTy() || ty->isStructTy()){
@@ -167,7 +168,8 @@ int getComplexity(Type* ty){
 
 float computeEdgeComplexity(Function* F){
   float ret;
-  int NumFields;
+
+  NumFields = 0;
 
   //  errs() << "F->ReturnType: " << *F->getReturnType() <<"\n";
   // errs() << "call func: " << F->getName() << "args: " << F->getArgumentList().size() << "\n";
@@ -176,7 +178,8 @@ float computeEdgeComplexity(Function* F){
     ret += getComplexity(A.getType()); 
   }
   //  errs() << "arglist size: " << FunctionWrapper::funcMap[F]->getArgWList().size() << "\n";
-  return ret;
+  errs() << "NumFields: " << NumFields << "\n";
+  return ret + 1.0/NumFields;
 
 }
 
@@ -196,7 +199,8 @@ void printCallGraphToFile(vector<CallEdge>& CG, string filename){
   ofstream outfile;
   outfile.open(filename);
   for(auto const &E : CG){
-    outfile << E.caller << " " << E.callee << " " << E.call_times << "\n";
+    outfile << E.caller << " " << E.callee << " " 
+	    << E.call_times << " " << E.type_complexity << "\n";
   }
   outfile.close();
 }
@@ -233,9 +237,7 @@ void readCallTimesFromPin(vector<CallPair>& vec, string filename){
     CallPair cp(caller, callee);
     vec.push_back(cp);
   }
-
 }
-
 
 //namespace cot{
 struct GetCallGraph : public ModulePass {
@@ -300,7 +302,7 @@ struct GetCallGraph : public ModulePass {
 		
 	    //	    errs() << "getCalledFunction: " << CI->getCalledFunction()->getName() << "\n";
 	    // CallPair cp(F.getName(), CI->getCalledFunction()->getName());
-	    CallEdge ce(F.getName(), CI->getCalledFunction()->getName(), 0);
+	    CallEdge ce(F.getName(), CI->getCalledFunction()->getName(), 0, 0.0);
 	    bool inCG = false;
 	    for (const auto& E : CG){
 	      if (E.caller == ce.caller && E.callee == ce.callee){
@@ -309,10 +311,9 @@ struct GetCallGraph : public ModulePass {
 	      }
 	    }
 	    if (!inCG){
+	      ce.type_complexity = computeEdgeComplexity(CI->getCalledFunction());
+	      errs() << "CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << ce.type_complexity << "\n"; 
 	      CG.push_back(ce);
-
-	      float complexity = computeEdgeComplexity(CI->getCalledFunction());
-	      errs() << "CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << complexity << "\n"; 
 	    } 
 	  }
 	}
