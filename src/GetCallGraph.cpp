@@ -58,12 +58,16 @@ public:
   string callee;
   int call_times;
   float type_complexity;
+  int implicit_leak;
+  int explicit_leak;
 
   CallEdge(string _caller, string _callee, int _call_times, float _type_complexity){
     caller = _caller;
     callee = _callee;
     call_times = _call_times;
     type_complexity = _type_complexity;
+    implicit_leak = 0;
+    explicit_leak = 0; 
   }
 };
 
@@ -111,7 +115,6 @@ bool isInt8PointerTy(Type* ty){
 int getComplexity(Type* ty){
 
   NumFields++;
-  //  errs() << "getComplexity ty: " << *ty << "\n"; 
 
   if(ty->isPointerTy() || ty->isStructTy()){
     //if this type is already existed, which means we have a recursive type
@@ -121,7 +124,7 @@ int getComplexity(Type* ty){
       //  errs() << "existed type found: " << **existedTypes.find(ty) << "\n";
       existedTypes.clear();
       // errs() << "after clear, existedTypes: " << existedTypes.size() << "\n";
-      return 1000;
+      return 100;
     }
     existedTypes.insert(ty);
   }
@@ -138,28 +141,24 @@ int getComplexity(Type* ty){
     //check if this is a recursive type
     if (ty->getContainedType(0)->isStructTy()){
       Type* sTy = ty->getContainedType(0);
-      for(int i = 0; i < sTy->getStructNumElements(); i++){
-	if (sTy->getStructElementType(i) == ty){
-	  return 1000;
-	}
-      }
+      for(int i = 0; i < sTy->getStructNumElements(); i++)
+	if (sTy->getStructElementType(i) == ty)
+	  return 100;
     }
-
-    //    errs() << "1+getContainedType: " << *ty->getContainedType(0) << "\n";
     return 1 + getComplexity(ty->getContainedType(0));
   }
-  if (ty->isFunctionTy()){
-    return 1000;
-  }
-  if (ty->isArrayTy()){
+  if (ty->isFunctionTy())
+    return 100;
+  
+  if (ty->isArrayTy())
     return getComplexity(ty->getArrayElementType());
-  }
+  
 
   if (ty->isStructTy()){		
     int sum = 0;
-    for (int i = 0; i < ty->getStructNumElements(); i++){
+    for (int i = 0; i < ty->getStructNumElements(); i++)
       sum += getComplexity(ty->getStructElementType(i));
-    }
+    
     return sum;
   }
   else
@@ -180,7 +179,6 @@ float computeEdgeComplexity(Function* F){
   //  errs() << "arglist size: " << FunctionWrapper::funcMap[F]->getArgWList().size() << "\n";
   errs() << "NumFields: " << NumFields << "\n";
   return ret + 1.0/NumFields;
-
 }
 
 
@@ -200,7 +198,8 @@ void printCallGraphToFile(vector<CallEdge>& CG, string filename){
   outfile.open(filename);
   for(auto const &E : CG){
     outfile << E.caller << " " << E.callee << " " 
-	    << E.call_times << " " << E.type_complexity << "\n";
+	    << E.call_times << " " << E.type_complexity << " "
+            << E.implicit_leak << " " << E.explicit_leak << "\n";
   }
   outfile.close();
 }
@@ -239,6 +238,35 @@ void readCallTimesFromPin(vector<CallPair>& vec, string filename){
   }
 }
 
+
+void findEdgesWithImplicitLeak(vector<CallEdge>& CG, string source){
+
+  errs() << "sourceFunc: " << source << "\n";
+
+  queue<string> worklist;
+  worklist.push(source);
+  set<string> visitedF;
+
+  while(!worklist.empty()){
+    string curr = worklist.front();
+    worklist.pop();
+    errs() << "curr: " << curr << "\n";
+    for(auto &E : CG){
+      if(E.callee == curr && 
+	 visitedF.find(E.caller) == visitedF.end()){
+	//	errs() << "implicit leak source function found!\n";
+	E.implicit_leak = 1;
+	visitedF.insert(E.caller);
+	worklist.push(E.caller);
+      }
+    }
+    errs() << "worklist size: " << worklist.size() << "\n";
+  }
+
+}
+
+
+
 //namespace cot{
 struct GetCallGraph : public ModulePass {
   static char ID;
@@ -257,14 +285,6 @@ struct GetCallGraph : public ModulePass {
     errs() << "PDG->senFuncs.size = " << PDG->senFuncs.size() << "\n";
     errs() << "PDG->insFuncs.size = " << PDG->insFuncs.size() << "\n";
      
-    //      errs() << "============================= Get Call Graph from the PDG ==================================\n";
-    /*     
-	   errs() << "============== Read call times from ***.c.gcov.calltimesonly files and record: ==============" << "\n";
-	   if (0 != readCallTimesFromFiles(call_times_path, gcovDict))
-	   errs() << "readCallTimesFromFiles failed...\n";
-
-	   errs() << "gcovDict size = " << gcovDict.size() << "\n";
-    */
     errs() << "==============BEGIN GetCallGraph Pass runOnModule: ==============" << "\n";
 
     int fid = 0;
@@ -334,6 +354,9 @@ struct GetCallGraph : public ModulePass {
 	}
       }
     }
+
+    string sourceFunc = "auth_check2";
+    findEdgesWithImplicitLeak(CG, sourceFunc);
 
     printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
 
@@ -476,4 +499,14 @@ int readCallTimesFromFilesOld(const std::string& dir,
   }
   outfile.close();
   }
+*/
+
+
+//      errs() << "============================= Get Call Graph from the PDG ==================================\n";
+/*     
+       errs() << "============== Read call times from ***.c.gcov.calltimesonly files and record: ==============" << "\n";
+       if (0 != readCallTimesFromFiles(call_times_path, gcovDict))
+       errs() << "readCallTimesFromFiles failed...\n";
+
+       errs() << "gcovDict size = " << gcovDict.size() << "\n";
 */
