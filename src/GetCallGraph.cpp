@@ -265,7 +265,14 @@ void findEdgesWithImplicitLeak(vector<CallEdge>& CG, string source){
 
 }
 
-
+void findEdgesWithForwardLeak(vector<CallEdge>& CG, const set<string>& S){
+  for (auto &E : CG){
+    if(S.find(E.caller) != S.end() && S.find(E.callee) != S.end()){
+      errs() << "Edge with forward leak: " << E.caller << " ---> " << E.callee << "\n";
+      E.explicit_leak = 1;
+    }
+  }
+}
 
 //namespace cot{
 struct GetCallGraph : public ModulePass {
@@ -284,7 +291,6 @@ struct GetCallGraph : public ModulePass {
     errs() << "PDG->getPassName: " << PDG->getPassName() << "\n";
     errs() << "PDG->senFuncs.size = " << PDG->senFuncs.size() << "\n";
     errs() << "PDG->insFuncs.size = " << PDG->insFuncs.size() << "\n";
-     
     errs() << "==============BEGIN GetCallGraph Pass runOnModule: ==============" << "\n";
 
     int fid = 0;
@@ -357,6 +363,12 @@ struct GetCallGraph : public ModulePass {
 
     string sourceFunc = "auth_check2";
     findEdgesWithImplicitLeak(CG, sourceFunc);
+    set<string> S;
+    for(auto const SF : PDG->senFuncs){
+      S.insert(SF->getFunction()->getName());
+    }
+    
+    findEdgesWithForwardLeak(CG, S);
 
     printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
 

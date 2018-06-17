@@ -646,6 +646,8 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 
   std::set<InstructionWrapper* > coloredInstSet;
 
+  std::set<Function*> visitedF;
+
   //worklist algorithm for propagation
   while(!queue.empty()){ 
     InstructionWrapper *InstW = const_cast<InstructionWrapper*>(queue.front());
@@ -671,6 +673,17 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	//  errs() << "Curr: " << *InstW->getInstruction() << " --- " << *adjacent_InstW->getInstruction()<<"\n";
 
 	if(true != adjacent_InstW->getFlag()){
+
+	  if (visitedF.find(adjacent_InstW->getFunction()) == visitedF.end()){
+	    errs() << "New Func colored: " << adjacent_InstW->getFunction()->getName() << " ";
+	    visitedF.insert(adjacent_InstW->getFunction());
+	    //   if(adjacent_InstW->getInstruction() != nullptr)
+	    //  errs() << "\nvisitedF: " << visitedF.size() << "\nInst: " << *adjacent_InstW->getInstruction() << "\n";
+	    errs() << "forward leak edge: " << InstW->getFunction()->getName() << " ---> " 
+		   << adjacent_InstW->getFunction()->getName() << "\n";
+
+	  }
+
 
 	  /*	  
 	  if(InstW->getInstruction()!= nullptr && adjacent_InstW->getInstruction() != nullptr)

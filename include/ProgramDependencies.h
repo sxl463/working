@@ -37,6 +37,12 @@ namespace cot {
   /*!
    * Program Dependencies Graph
    */
+
+  typedef struct{
+    string caller;
+    string callee;
+  }ForwardCallEdge;
+
   class ProgramDependencyGraph : public llvm::ModulePass
   {
   public:
@@ -46,6 +52,7 @@ namespace cot {
 
     set<FunctionWrapper*> senFuncs;
     set<FunctionWrapper*> insFuncs;
+    set<ForwardCallEdge> edgesWithForwardLeak;
 
     ProgramDependencyGraph() : llvm::ModulePass(ID){
       PDG = new ProgramDepGraph();
