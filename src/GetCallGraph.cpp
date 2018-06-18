@@ -167,8 +167,10 @@ int getComplexity(Type* ty){
 
 float computeEdgeComplexity(Function* F){
   float ret = 0.0;
-
   NumFields = 0;
+
+  if (F->getReturnType()->isVoidTy() && F.getArgumentList().empty())
+    return 0;
 
   //  errs() << "F->ReturnType: " << *F->getReturnType() <<"\n";
   // errs() << "call func: " << F->getName() << "args: " << F->getArgumentList().size() << "\n";
