@@ -178,7 +178,10 @@ float computeEdgeComplexity(Function* F){
   }
   //  errs() << "arglist size: " << FunctionWrapper::funcMap[F]->getArgWList().size() << "\n";
   errs() << "NumFields: " << NumFields << "\n";
-  return (NumFields > 0) ? (ret + 1.0/NumFields) : ret;
+  if (NumFields != 0 )
+    ret = ret + 1.0/NumFields;
+  
+  return ret;
 }
 
 
