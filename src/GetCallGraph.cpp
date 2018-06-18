@@ -166,7 +166,7 @@ int getComplexity(Type* ty){
 }
 
 float computeEdgeComplexity(Function* F){
-  float ret;
+  float ret = 0.0;
 
   NumFields = 0;
 
@@ -178,7 +178,7 @@ float computeEdgeComplexity(Function* F){
   }
   //  errs() << "arglist size: " << FunctionWrapper::funcMap[F]->getArgWList().size() << "\n";
   errs() << "NumFields: " << NumFields << "\n";
-  return ret + 1.0/NumFields;
+  return (NumFields > 0) ? (ret + 1.0/NumFields) : ret;
 }
 
 
