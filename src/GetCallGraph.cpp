@@ -169,13 +169,18 @@ float computeEdgeComplexity(Function* F){
   float ret = 0.0;
   NumFields = 0;
 
-  if (F->getReturnType()->isVoidTy() && F.getArgumentList().empty())
+  //  errs() << "compute edge complexity in " << F->getName() << "\n";
+
+  if (F->getReturnType()->isVoidTy() && F->getArgumentList().empty())
     return 0;
 
   //  errs() << "F->ReturnType: " << *F->getReturnType() <<"\n";
-  // errs() << "call func: " << F->getName() << "args: " << F->getArgumentList().size() << "\n";
+  errs() << "complexity in func: " << F->getName() << "args: " << F->getArgumentList().size() << "\n";
   ret = getComplexity(F->getReturnType());
+  errs() << "after return comp ret = " << ret << "\n";
   for (auto& A : F->getArgumentList()){
+    if(F->getName() == "initialize_options")
+      errs() << "A.getType: " << A.getType() << "\n";
     ret += getComplexity(A.getType()); 
   }
   //  errs() << "arglist size: " << FunctionWrapper::funcMap[F]->getArgWList().size() << "\n";
@@ -342,7 +347,9 @@ struct GetCallGraph : public ModulePass {
 	      }
 	    }
 	    if (!inCG){
+	      errs() << "before computeEdgeComplexity...\n";
 	      ce.type_complexity = computeEdgeComplexity(CI->getCalledFunction());
+	      errs() << "after computeEdgeComplexity...\n";
 	      errs() << "CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << ce.type_complexity << "\n"; 
 	      CG.push_back(ce);
 	    } 
