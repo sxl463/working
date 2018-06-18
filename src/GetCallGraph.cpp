@@ -350,7 +350,8 @@ struct GetCallGraph : public ModulePass {
     errs() << "call graph size: " << CG.size() << "\n";
     errs() << "non redundant call edges: " << testS.size() << "\n";
 
-    readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout");
+    //    readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout");
+    readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.calltimes");
 
     for (const auto& P : callPairsFromPin){
       for (auto& E : CG){
@@ -361,7 +362,9 @@ struct GetCallGraph : public ModulePass {
       }
     }
 
-    string sourceFunc = "auth_check2";
+    //string sourceFunc = "auth_check2";
+    string sourceFunc = "sshkey_parse_private2";
+
     findEdgesWithImplicitLeak(CG, sourceFunc);
     set<string> S;
     for(auto const SF : PDG->senFuncs){
@@ -370,7 +373,8 @@ struct GetCallGraph : public ModulePass {
     
     findEdgesWithForwardLeak(CG, S);
 
-    printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
+    //    printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
+    printCallGraphToFile(CG, "./ssh/ssh.callgraph");
 
     errs() << "CallPairsFromPin: " << callPairsFromPin.size() << "\n";
 
