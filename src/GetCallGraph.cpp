@@ -155,11 +155,12 @@ int getComplexity(Type* ty){
   
 
   if (ty->isStructTy()){		
-    int sum = 0;
-    for (int i = 0; i < ty->getStructNumElements(); i++)
-      sum += getComplexity(ty->getStructElementType(i));
-    
-    return sum;
+    int max = 0;
+    for (int i = 0; i < ty->getStructNumElements(); i++){
+      float nextTyComp = getComplexity(ty->getStructElementType(i));
+      max = (max > nextTyComp) ? max : nextTyComp;
+    }
+    return max;
   }
   else
     return 0;
@@ -207,7 +208,7 @@ void printCallGraphToFile(vector<CallEdge>& CG, string filename){
   ofstream outfile;
   outfile.open(filename);
   for(auto const &E : CG){
-    outfile << E.caller << " " << E.callee << " " 
+    outfile <<funcDict[E.caller] << " " << funcDict[E.callee] << " " 
 	    << E.call_times << " " << E.type_complexity << " "
             << E.implicit_leak << " " << E.explicit_leak << "\n";
   }
@@ -305,12 +306,18 @@ struct GetCallGraph : public ModulePass {
 
     int fid = 0;
 
+    ofstream func_id_file;
+    func_id_file.open("./thttpd/thttpd_func_id_map.txt");
+
     set<CallPair> testS;
     for (Function &F : M){
       if (F.isDeclaration() || F.isIntrinsic())
 	continue;
 
       funcDict[F.getName()] = fid;
+      func_id_file << F.getName().str() << " " << funcDict[F.getName()] << "\n";
+
+
 
       //count instructions in F
       int NumInsts = 0;
@@ -359,14 +366,23 @@ struct GetCallGraph : public ModulePass {
 	
     }//end for Function
       
+    func_id_file.close();
+
     errs() << "call graph size: " << CG.size() << "\n";
     errs() << "non redundant call edges: " << testS.size() << "\n";
 
-    //    readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout");
-    readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.calltimes");
+    readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout");
+    // readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.calltimes");
 
+    set<string> invokedF;
     for (const auto& P : callPairsFromPin){
       for (auto& E : CG){
+
+	if(invokedF.find(E.caller) == invokedF.end())
+	  invokedF.insert(E.caller);
+	if(invokedF.find(E.callee) == invokedF.end())
+	  invokedF.insert(E.callee);
+
 	if (P.caller == E.caller && P.callee == E.callee){
 	  E.call_times++;
 	  //	  errs() << "Found runtime call " << E.caller << " " << E.callee << "\n";
@@ -374,8 +390,14 @@ struct GetCallGraph : public ModulePass {
       }
     }
 
-    //string sourceFunc = "auth_check2";
-    string sourceFunc = "sshkey_parse_private2";
+    string sourceFunc = "auth_check2";
+    //string sourceFunc = "sshkey_parse_private2";
+
+
+    errs() << "invoked funcs: " << invokedF.size() << "\b";
+    errs() << "sensitive func: " << funcDict[sourceFunc] << "\n";
+    errs() << "main func: " << funcDict["main"] << "\n";
+
 
     findEdgesWithImplicitLeak(CG, sourceFunc);
     set<string> S;
@@ -385,8 +407,8 @@ struct GetCallGraph : public ModulePass {
     
     findEdgesWithForwardLeak(CG, S);
 
-    //    printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
-    printCallGraphToFile(CG, "./ssh/ssh.callgraph");
+    printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
+    //   printCallGraphToFile(CG, "./ssh/ssh.callgraph");
 
     errs() << "CallPairsFromPin: " << callPairsFromPin.size() << "\n";
 
@@ -409,9 +431,6 @@ struct GetCallGraph : public ModulePass {
     return false;
   }
 };
-
-
-
 
 
 char GetCallGraph::ID = 0;
