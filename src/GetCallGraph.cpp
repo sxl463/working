@@ -273,7 +273,6 @@ void findEdgesWithImplicitLeak(vector<CallEdge>& CG, string source){
     }
     errs() << "worklist size: " << worklist.size() << "\n";
   }
-
 }
 
 void findEdgesWithForwardLeak(vector<CallEdge>& CG, const set<string>& S){
