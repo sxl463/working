@@ -50,7 +50,8 @@ namespace cot
     DATA_GENERAL,
     DATA_DEF_USE,
     DATA_RAW,
-    PARAMETER
+    PARAMETER,
+    RET
   };
 
   enum ControlType
@@ -240,9 +241,9 @@ namespace cot
     static void constructInstMap(llvm::Function &F) {
       for (llvm::inst_iterator I = inst_begin(F), IE = inst_end(F); I != IE; ++I) {
 
-	//temp testing, remove soon later...
-	//	llvm::errs() << &*I << " " << *I << "\n";
-
+	//	if(llvm::isa<llvm::ReturnInst>(*I))
+	//  continue; // for ReturnInst, we do insertion at connection phase, see connectcallerandcallee
+	
 	//if not in instMap yet, insert
 	if (instMap.find(&*I) == instMap.end()) { 
 	    InstructionWrapper *iw = new InstructionWrapper(&*I, &F, INST);
