@@ -100,6 +100,9 @@ std::set<llvm::Value*> allPtrSet;
 std::vector<llvm::Value*> sensitive_values;
 std::vector<InstructionWrapper*> sensitive_nodes;
 
+std::vector<pair<string, string> > edgesWithParamLeak;
+std::vector<pair<string, string> > edgesWithReturnLeak;
+
 
 void ProgramDependencyGraph::connectAllPossibleFunctions(InstructionWrapper* CInstW, FunctionType* funcTy){
 
@@ -694,19 +697,20 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       if(nullptr != DNode->getDependencyList()[i].first->getData()){
 	InstructionWrapper *adjacent_InstW = 
 	  *InstructionWrapper::nodes.find(const_cast<InstructionWrapper*>(DNode->getDependencyList()[i].first->getData())); 
-
+	/*
        	if(InstW->getInstruction()!= nullptr && adjacent_InstW->getInstruction() != nullptr)
 	  errs() << "Curr: " << *InstW->getInstruction() << " --- " << *adjacent_InstW->getInstruction()<<"\n";
 	
        	if(isa<ReturnInst>(InstW->getInstruction()) && adjacent_InstW->getType() == ENTRY)
 	  errs() << "Curr: " << *InstW->getInstruction() << " --> " << "ENTRY: " << adjacent_InstW->getFunction()->getName() << "\n";
-	
+	*/
 
 	if(true != adjacent_InstW->getFlag()){
 
 	  // CALL -> ENTRY
 	  if (InstW->getType() == CALL && adjacent_InstW->getType() == ENTRY){
-	    errs() << "CALL --> ENTRY : " << InstW->getFunction()->getName() << " --> " << adjacent_InstW->getFunction()->getName() << "\n\n"; 
+	    errs() << "Parameter Leak : " << InstW->getFunction()->getName() << " --> " << adjacent_InstW->getFunction()->getName() << "\n\n"; 
+	    edgesWithParamLeak.push_back(make_pair(InstW->getFunction()->getName(), adjacent_InstW->getFunction()->getName()));
 	  }
 
 	  if (visitedF.find(adjacent_InstW->getFunction()) == visitedF.end()){
@@ -716,8 +720,8 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	    //  errs() << "\nvisitedF: " << visitedF.size() << "\nInst: " << *adjacent_InstW->getInstruction() << "\n";
 	    if (InstW->getFunction()->getName() != adjacent_InstW->getFunction()->getName()){
 	      if (DNode->getDependencyList()[i].second == RET){
-		errs() << "backward, through return value:\n";
-		errs() << "backward leak edge: " << InstW->getFunction()->getName() << " ---> " << adjacent_InstW->getFunction()->getName() << "\n";
+		errs() << "Return Leak : " << InstW->getFunction()->getName() << " ---> " << adjacent_InstW->getFunction()->getName() << "\n";
+		edgesWithReturnLeak.push_back(make_pair(adjacent_InstW->getFunction()->getName(), InstW->getFunction()->getName()));
 	      }
 	    }
 	  }

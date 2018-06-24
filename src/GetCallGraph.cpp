@@ -35,10 +35,12 @@
 #include "SystemControlDependenceGraph.h"
 #include "GetCallGraph.h"
 
+using namespace std;
+using namespace cot;
+using namespace llvm;
 
 class CallPair {
 public:
-
   string caller;
   string callee;
 
@@ -49,7 +51,6 @@ public:
   bool operator==(const CallPair &other) const{
     return (caller == other.caller) && (callee == other.callee);
   }
-
 };
 
 class CallEdge{
@@ -58,22 +59,25 @@ public:
   string callee;
   int call_times;
   float type_complexity;
-  int implicit_leak;
-  int explicit_leak;
+  int param_leak;
+  int return_leak;
 
   CallEdge(string _caller, string _callee, int _call_times, float _type_complexity){
     caller = _caller;
     callee = _callee;
     call_times = _call_times;
     type_complexity = _type_complexity;
-    implicit_leak = 0;
-    explicit_leak = 0; 
+    param_leak = 0;
+    return_leak = 0; 
   }
 };
 
 
 extern std::set<FunctionWrapper*> sen_FuncSet;
 extern std::set<FunctionWrapper*> ins_FuncSet;
+
+extern vector<pair<string, string> > edgesWithParamLeak;
+extern vector<pair<string, string> > edgesWithReturnLeak;
 
 
 static unsigned int call_site_id = 0;
@@ -91,10 +95,6 @@ map<string, vector<int> > gcovDict;
 set<string> funcSet;
 map<string, int> funcDict;
 set<FidSize*> fidSizeSet;
-
-using namespace std;
-using namespace cot;
-using namespace llvm;
 
 
 static set<string> existedFiles;
@@ -193,6 +193,36 @@ float computeEdgeComplexity(Function* F){
 }
 
 
+void findEdgesWithLeak (vector<CallEdge>& CG, 
+			vector<pair<string, string> >& edgesWithParamLeak, 
+			vector<pair<string, string> >& edgesWithReturnLeak){
+
+  set<string> callerP;
+  set<string> calleeP;
+  set<string> callerR;
+  set<string> calleeR;
+
+  for(auto &E : edgesWithParamLeak){
+    callerP.insert(E.first);
+    calleeP.insert(E.second);
+  }
+  for(auto &E : edgesWithReturnLeak){
+    callerR.insert(E.first);
+    calleeR.insert(E.second);
+  }
+
+  for (auto &E : CG){
+    if(callerP.find(E.caller) != callerP.end() && calleeP.find(E.callee) != calleeP.end()){
+      errs() << "Edge with parameter leak: " << E.caller << " ---> " << E.callee << "\n";
+      E.param_leak = 1;
+    }
+    if(callerR.find(E.caller) != callerR.end() && calleeR.find(E.callee) != calleeR.end()){
+      errs() << "Edge with return leak: " << E.caller << " ---> " << E.callee << "\n";
+      E.return_leak = 1;
+    }
+  }
+}
+
 
 void printFidSizeSetToFile(set<FidSize*>& S, string filename){
   ofstream outfile;
@@ -210,7 +240,7 @@ void printCallGraphToFile(vector<CallEdge>& CG, string filename){
   for(auto const &E : CG){
     outfile <<funcDict[E.caller] << " " << funcDict[E.callee] << " " 
 	    << E.call_times << " " << E.type_complexity << " "
-            << E.implicit_leak << " " << E.explicit_leak << "\n";
+            << E.param_leak << "/" << E.return_leak << "\n";
   }
   outfile.close();
 }
@@ -250,40 +280,6 @@ void readCallTimesFromPin(vector<CallPair>& vec, string filename){
 }
 
 
-void findEdgesWithImplicitLeak(vector<CallEdge>& CG, string source){
-
-  errs() << "sourceFunc: " << source << "\n";
-
-  queue<string> worklist;
-  worklist.push(source);
-  set<string> visitedF;
-
-  while(!worklist.empty()){
-    string curr = worklist.front();
-    worklist.pop();
-    errs() << "curr: " << curr << "\n";
-    for(auto &E : CG){
-      if(E.callee == curr && 
-	 visitedF.find(E.caller) == visitedF.end()){
-	//	errs() << "implicit leak source function found!\n";
-	E.implicit_leak = 1;
-	visitedF.insert(E.caller);
-	worklist.push(E.caller);
-      }
-    }
-    errs() << "worklist size: " << worklist.size() << "\n";
-  }
-}
-
-void findEdgesWithForwardLeak(vector<CallEdge>& CG, const set<string>& S){
-  for (auto &E : CG){
-    if(S.find(E.caller) != S.end() && S.find(E.callee) != S.end()){
-      errs() << "Edge with forward leak: " << E.caller << " ---> " << E.callee << "\n";
-      E.explicit_leak = 1;
-    }
-  }
-}
-
 //namespace cot{
 struct GetCallGraph : public ModulePass {
   static char ID;
@@ -301,6 +297,8 @@ struct GetCallGraph : public ModulePass {
     errs() << "PDG->getPassName: " << PDG->getPassName() << "\n";
     errs() << "PDG->senFuncs.size = " << PDG->senFuncs.size() << "\n";
     errs() << "PDG->insFuncs.size = " << PDG->insFuncs.size() << "\n";
+    errs() << "edgesWithParamLeak.size = " << PDG->edgesWithParamLeak.size() << "\n";
+    errs() << "edgesWithReturnLeak.size = " << PDG->edgesWithReturnLeak.size() << "\n";
     errs() << "==============BEGIN GetCallGraph Pass runOnModule: ==============" << "\n";
 
     int fid = 0;
@@ -315,8 +313,6 @@ struct GetCallGraph : public ModulePass {
 
       funcDict[F.getName()] = fid;
       func_id_file << F.getName().str() << " " << funcDict[F.getName()] << "\n";
-
-
 
       //count instructions in F
       int NumInsts = 0;
@@ -398,13 +394,7 @@ struct GetCallGraph : public ModulePass {
     errs() << "main func: " << funcDict["main"] << "\n";
 
 
-    findEdgesWithImplicitLeak(CG, sourceFunc);
-    set<string> S;
-    for(auto const SF : PDG->senFuncs){
-      S.insert(SF->getFunction()->getName());
-    }
-    
-    findEdgesWithForwardLeak(CG, S);
+    findEdgesWithLeak(CG, PDG->edgesWithParamLeak, PDG->edgesWithReturnLeak);
 
     printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
     //   printCallGraphToFile(CG, "./ssh/ssh.callgraph");
@@ -555,4 +545,41 @@ int readCallTimesFromFilesOld(const std::string& dir,
        errs() << "readCallTimesFromFiles failed...\n";
 
        errs() << "gcovDict size = " << gcovDict.size() << "\n";
+*/
+
+
+/*
+void findEdgesWithImplicitLeak(vector<CallEdge>& CG, string source){
+
+  errs() << "sourceFunc: " << source << "\n";
+
+  queue<string> worklist;
+  worklist.push(source);
+  set<string> visitedF;
+
+  while(!worklist.empty()){
+    string curr = worklist.front();
+    worklist.pop();
+    errs() << "curr: " << curr << "\n";
+    for(auto &E : CG){
+      if(E.callee == curr && 
+	 visitedF.find(E.caller) == visitedF.end()){
+	//	errs() << "implicit leak source function found!\n";
+	E.implicit_leak = 1;
+	visitedF.insert(E.caller);
+	worklist.push(E.caller);
+      }
+    }
+    errs() << "worklist size: " << worklist.size() << "\n";
+  }
+}
+
+void findEdgesWithForwardLeak(vector<CallEdge>& CG, const set<string>& S){
+  for (auto &E : CG){
+    if(S.find(E.caller) != S.end() && S.find(E.callee) != S.end()){
+      errs() << "Edge with forward leak: " << E.caller << " ---> " << E.callee << "\n";
+      E.explicit_leak = 1;
+    }
+  }
+}
 */

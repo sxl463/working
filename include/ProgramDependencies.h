@@ -37,12 +37,17 @@ namespace cot {
   /*!
    * Program Dependencies Graph
    */
+  /*
+  typedef struct{
+    string caller;
+    string callee;
+  }ParamLeakEdge;
 
   typedef struct{
     string caller;
     string callee;
-  }ForwardCallEdge;
-
+  }ReturnLeakEdge;
+  */
   class ProgramDependencyGraph : public llvm::ModulePass
   {
   public:
@@ -52,7 +57,8 @@ namespace cot {
 
     set<FunctionWrapper*> senFuncs;
     set<FunctionWrapper*> insFuncs;
-    set<ForwardCallEdge> edgesWithForwardLeak;
+    vector<pair<string, string> > edgesWithParamLeak;
+    vector<pair<string, string> > edgesWithReturnLeak;
 
     ProgramDependencyGraph() : llvm::ModulePass(ID){
       PDG = new ProgramDepGraph();
