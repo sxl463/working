@@ -80,7 +80,7 @@ void ControlDependencyGraph::computeDependencies(llvm::Function &F, llvm::PostDo
   InstructionWrapper::nodes.insert(root);
   InstructionWrapper::funcInstWList[&F].insert(root);
 
-  errs() << " CDG.cpp after insert nodes.size " << InstructionWrapper::nodes.size() << " Function: " << F.getName().str() << '\n';
+  //  errs() << " CDG.cpp after insert nodes.size " << InstructionWrapper::nodes.size() << " Function: " << F.getName().str() << '\n';
   //TODO: maybe need to use nodes set element explicitly instead of using root directly
   FunctionWrapper::funcMap[&F]->setEntry(root);
 
@@ -120,7 +120,7 @@ void ControlDependencyGraph::computeDependencies(llvm::Function &F, llvm::PostDo
 
   ///find nearest common ancestor in Post Dominator Tree for the BasicBlock pair.
 
-  errs() << "computerDependencies DEBUG 1\n";
+  //  errs() << "computerDependencies DEBUG 1\n";
 
   for (EdgeItr I = EdgeSet.begin(), E = EdgeSet.end(); I != E; ++I)
     {

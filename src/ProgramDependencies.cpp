@@ -496,7 +496,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      // e.g.   %1 = load i32 (i32)** %p, align 8
 	      //	%call = call i32 %1(i32 2))
 	      if(callee == nullptr){
-		errs() << "call_func = null: " << *CI << "\n";
+		//		errs() << "call_func = null: " << *CI << "\n";
 		
 		Type* t = CI->getCalledValue()->getType();
 		errs() << "indirect call, called Type t = " << *t << "\n";
@@ -758,13 +758,13 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	errs() << (*FI).first->getName() << " hasFuncOrFilePtr()\n";
       }
       if((*FI).second->isVisited()){
-	errs() << (*FI).first->getName() << " is colored(sensitive)\n";
+	//	errs() << (*FI).first->getName() << " is colored(sensitive)\n";
 	Function* func = (*FI).second->getFunction();
-	errs() << "func name = " << func->getName() << "\n";
+	//	errs() << "func name = " << func->getName() << "\n";
 	sen_FuncSet.insert((*FI).second );
       }
       else{
-	errs() << (*FI).first->getName() << "is uncolored\n";
+	//	errs() << (*FI).first->getName() << "is uncolored\n";
 	ins_FuncSet.insert((*FI).second );
       }
     }
@@ -779,10 +779,11 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   senFuncs = sen_FuncSet;
   insFuncs = ins_FuncSet;
 
+  /*
   errs() << "=========================== Sensitive Functions List ============================= \n";
   for(auto const &F : senFuncs){
     errs() << F->getFunction()->getName() << "\n";
-  }
+    }*/
 
 
 

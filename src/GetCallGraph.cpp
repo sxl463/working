@@ -14,6 +14,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
+#include "llvm/IR/TypeFinder.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
@@ -38,6 +39,38 @@
 using namespace std;
 using namespace cot;
 using namespace llvm;
+
+
+class MemberType {
+public:
+  Type* ty;
+  int complexity;
+  int level; // root 0
+  Type* parentTy;
+  // children getContainedTypes....
+  vector<MemberType> children;
+
+  MemberType(Type* _ty, Type* _parentTy, 
+	     int _level, int _complexity,
+	     vector<MemberType> vec){
+    ty = _ty;
+    parentTy = _parentTy;
+    level = _level;
+    complexity = _complexity;
+    children = vec;
+  }
+  ~MemberType();
+};
+
+
+
+
+
+/*
+    for (int i = 0; i < ty->getNumContainedTypes(); i++){
+      children
+    }
+*/
 
 class CallPair {
 public:
@@ -79,7 +112,6 @@ extern std::set<FunctionWrapper*> ins_FuncSet;
 extern vector<pair<string, string> > edgesWithParamLeak;
 extern vector<pair<string, string> > edgesWithReturnLeak;
 
-
 static unsigned int call_site_id = 0;
 
 set<CallSiteWrapper*> cswSet;
@@ -99,8 +131,87 @@ set<FidSize*> fidSizeSet;
 
 static set<string> existedFiles;
 
+
+
 int NumFields = 0;
-set<Type*> existedTypes;
+set<Type*> recursiveTypes; //Struct only
+static map<Type*, int> StructTyMap;
+
+static map<Type*, int> typeCache;
+
+
+
+Type* getNonPointerBaseTy(Type* ty){
+  while (ty->isPointerTy()){
+    ty = ty->getContainedType(0);
+  }
+  return ty;
+}
+
+
+
+//E.g. %struct.TimerStruct = type { void (i8*, %struct.timeval*)*, %union.ClientData, 
+// i64, i32, %struct.timeval, %struct.TimerStruct*, %struct.TimerStruct*, i32 }
+int evaluateStructTy(Type* STy){
+  if (STy == nullptr){
+    errs() << "evaluateSturctTy, STy is nullptr!\n";
+    exit(1);
+  }
+  errs() << "STy: " << *STy << "------------------\n";
+  if (typeCache.find(STy) != typeCache.end()){
+    errs() << "STy is in typeCache, typeCache.size: " << typeCache.size() << "\n";
+    return typeCache[STy];
+  }
+
+  int max = 0; 
+  for (int i = 0; i < STy->getStructNumElements(); i++){
+    int elem = 0;
+    Type* ty = STy->getStructElementType(i);
+    
+    errs() << i << " ElemTy: " << *ty << "\n";
+    if (ty->isPointerTy()){
+      Type* pteTy = ty->getContainedType(0);
+      errs() << "pteTy: " << *pteTy << " ------ ";
+      // check the pointee type, if struct, check existedTypes
+      // if existed, stop and return 1, otherwise, evaluate it
+      if (pteTy->isStructTy()){
+	if (recursiveTypes.find(pteTy) != recursiveTypes.end())
+	  elem = 1;
+	else{
+	  errs() << "not in recursiveTypes\n";
+	  elem = evaluateStructTy(pteTy);
+	  
+	}
+      }
+      else if (pteTy->isFunctionTy())
+	elem = 1;
+      // only for multiple level pointers with no struct in the middle
+      else if (pteTy->isPointerTy()){
+	while (pteTy->isPointerTy()){
+	  elem++;
+	  pteTy = pteTy->getContainedType(0);
+	}
+      }
+      else elem = 0; // default
+    }
+    else if (ty->isStructTy()){
+      errs() << " (case 2: structTy) ";
+      elem = evaluateStructTy(ty);
+    }
+    else
+      elem = 0;
+
+    errs() << "elem = " << elem << "\n";
+    max = (max >= elem) ? max : elem;
+  }
+
+  // store STy's type complexity in the cache
+  if (typeCache.find(STy) == typeCache.end()){
+    typeCache[STy] = max;
+    errs() << "Cache ty = " << *STy << " complexity: " << max << "\n";
+  }
+  return max;
+}
 
 
 bool isInt8PointerTy(Type* ty){
@@ -113,82 +224,59 @@ bool isInt8PointerTy(Type* ty){
 }
 
 int getComplexity(Type* ty){
+  if (ty == nullptr) return 0;
 
-  NumFields++;
-
-  if(ty->isPointerTy() || ty->isStructTy()){
-    //if this type is already existed, which means we have a recursive type
-    if(existedTypes.find(ty) != existedTypes.end() &&
-       !isInt8PointerTy(ty)){
-      //     errs() << "existedTypes: " << existedTypes.size() << "\n";
-      //  errs() << "existed type found: " << **existedTypes.find(ty) << "\n";
-      existedTypes.clear();
-      // errs() << "after clear, existedTypes: " << existedTypes.size() << "\n";
-      return 100;
-    }
-    existedTypes.insert(ty);
+  if(ty->isStructTy()){
+    //    errs() << "StructTy: " << *ty << "\n";
+    return StructTyMap[ty];
   }
-
   // take care of recursive types. e.g. linked list
   if (ty->isPointerTy()){
-    string Str;
-    raw_string_ostream OS(Str);
-    OS << *ty;
-    //FILE*, bypass, no need to continue
-    if("%struct._IO_FILE*" == OS.str() || 
-       "%struct._IO_marker*" == OS.str())
-      return 1000;
-    //check if this is a recursive type
-    if (ty->getContainedType(0)->isStructTy()){
-      Type* sTy = ty->getContainedType(0);
-      for(int i = 0; i < sTy->getStructNumElements(); i++)
-	if (sTy->getStructElementType(i) == ty)
-	  return 100;
+
+    // if i8* (char*)
+    //    if (isInt8PointerTy(ty->getContainedType(0)))
+    //  return 1;
+
+    if (ty->getContainedType(0)->isFunctionTy()){
+      errs() << "FunctionTy found\n";
+      errs() << *ty->getContainedType(0) << "\n";
+      return 1;
     }
     return 1 + getComplexity(ty->getContainedType(0));
   }
-  if (ty->isFunctionTy())
-    return 100;
-  
-  if (ty->isArrayTy())
-    return getComplexity(ty->getArrayElementType());
-  
 
-  if (ty->isStructTy()){		
-    int max = 0;
-    for (int i = 0; i < ty->getStructNumElements(); i++){
-      float nextTyComp = getComplexity(ty->getStructElementType(i));
-      max = (max > nextTyComp) ? max : nextTyComp;
-    }
-    return max;
+  // TODO: is 1 OK for FunctionTy?
+  if (ty->isFunctionTy()){
+    errs() << "ty is FunctionTy: " << *ty << "\n";
+    return 1;
   }
-  else
-    return 0;
+  // we consider array as a pointer, so plus 1
+  if (ty->isArrayTy())
+    return 1 + getComplexity(ty->getArrayElementType());
+  
+  return 0; // default plus one
 }
 
 float computeEdgeComplexity(Function* F){
-  float ret = 0.0;
-  NumFields = 0;
-
-  //  errs() << "compute edge complexity in " << F->getName() << "\n";
+  int ret = 0; 
 
   if (F->getReturnType()->isVoidTy() && F->getArgumentList().empty())
     return 0;
 
-  //  errs() << "F->ReturnType: " << *F->getReturnType() <<"\n";
-  errs() << "complexity in func: " << F->getName() << "args: " << F->getArgumentList().size() << "\n";
+  //  errs() << F->getName() 
+  //	 << " how many args: " << F->getArgumentList().size() << "\n";
   ret = getComplexity(F->getReturnType());
-  errs() << "after return comp ret = " << ret << "\n";
+  typeCache[F->getReturnType()] = ret;
+
+
+  errs() << "retval complexity: " << ret << "\n";
   for (auto& A : F->getArgumentList()){
     if(F->getName() == "initialize_options")
       errs() << "A.getType: " << A.getType() << "\n";
-    ret += getComplexity(A.getType()); 
+    int arg_complexity = getComplexity(A.getType());
+    errs() << "arg : " << *A.getType() << " " << arg_complexity << "\n";
+    ret += arg_complexity; 
   }
-  //  errs() << "arglist size: " << FunctionWrapper::funcMap[F]->getArgWList().size() << "\n";
-  errs() << "NumFields: " << NumFields << "\n";
-  if (NumFields != 0 )
-    ret = ret + 1.0/NumFields;
-  
   return ret;
 }
 
@@ -214,7 +302,7 @@ void findEdgesWithLeak (vector<CallEdge>& CG,
   for (auto &E : CG){
     if(callerP.find(E.caller) != callerP.end() && calleeP.find(E.callee) != calleeP.end()){
       errs() << "Edge with parameter leak: " << E.caller << " ---> " << E.callee << "\n";
-      E.param_leak = 1;
+      E.param_leak = SECRET_FILE_SIZE*8;
     }
     if(callerR.find(E.caller) != callerR.end() && calleeR.find(E.callee) != calleeR.end()){
       errs() << "Edge with return leak: " << E.caller << " ---> " << E.callee << "\n";
@@ -244,7 +332,6 @@ void printCallGraphToFile(vector<CallEdge>& CG, string filename){
   }
   outfile.close();
 }
-
 
 void readCallSiteFromFile(set<CallSiteWrapper*>& S, string filename){
   ifstream infile(filename);
@@ -280,7 +367,6 @@ void readCallTimesFromPin(vector<CallPair>& vec, string filename){
 }
 
 
-//namespace cot{
 struct GetCallGraph : public ModulePass {
   static char ID;
   GetCallGraph() : ModulePass(ID) {}
@@ -301,10 +387,94 @@ struct GetCallGraph : public ModulePass {
     errs() << "edgesWithReturnLeak.size = " << PDG->edgesWithReturnLeak.size() << "\n";
     errs() << "==============BEGIN GetCallGraph Pass runOnModule: ==============" << "\n";
 
-    int fid = 0;
+    // process all types in this module, find all recursive types(struct)
+    TypeFinder StructTypes;
+    StructTypes.run(M, true);
+    for (auto *STy : StructTypes){
+      set<Type*> prevTypes;
+      prevTypes.insert(STy);
+      //     errs() << "\n+++++++++++++++++++++++++++++++++++++++\n" << prevTypes.size()<<"\n";
+      for(int i = 0; i < STy->getNumContainedTypes(); i++){
+	Type* ty = STy->getContainedType(i);
+	//	errs() << "ty [" << i <<" ]: " << *ty << "\n";	
+	if (ty->isPointerTy()){
+	  Type* baseTy = getNonPointerBaseTy(ty);
 
+	  //	  Type* pteTy = ty->getContainedType(0);
+	  if (recursiveTypes.find(baseTy) != recursiveTypes.end() || 
+	      prevTypes.find(baseTy) != prevTypes.end()){
+	    errs() << "recursive ty: " << *baseTy << "\n";
+	    recursiveTypes.insert(baseTy);
+	    prevTypes.insert(baseTy);
+	  }
+	  // TODO: adhoc processing for reciprocally called structs, see sshkey and sshkey_cert
+	  if (baseTy->isStructTy()){
+	    for (int i = 0; i < baseTy->getStructNumElements(); i++){
+	      Type* tyi = getNonPointerBaseTy(baseTy->getStructElementType(i)); 
+	      if (recursiveTypes.find(tyi) != recursiveTypes.end() ||
+		  prevTypes.find(tyi) != prevTypes.end()){
+		errs() << "deep recursive struct: " << *tyi << "\n";
+		prevTypes.insert(tyi);
+		recursiveTypes.insert(tyi);
+	      }
+	    }
+	  }//end if baseTy->isStructTy
+	}
+
+	if (ty->isStructTy()){
+	  
+	  if (recursiveTypes.find(ty) != recursiveTypes.end() || 
+	      prevTypes.find(ty) != prevTypes.end()){
+	    errs() << "recursive ty: " << *ty << "\n";
+	    recursiveTypes.insert(ty);
+	    prevTypes.insert(ty);
+	  }
+
+	    for (int i = 0; i < ty->getStructNumElements(); i++){
+	      Type* tyi = getNonPointerBaseTy(ty->getStructElementType(i)); 
+	      if (recursiveTypes.find(tyi) != recursiveTypes.end() ||
+		  prevTypes.find(tyi) != prevTypes.end()){
+		errs() << "deep recursive struct: " << *tyi << "\n";
+		prevTypes.insert(tyi);
+		recursiveTypes.insert(tyi);
+	      }
+	    }
+	}// end ty->isStructTy()
+      }
+      //      errs() << "\n---------------------------------------\n";
+      prevTypes.clear();
+      //  StructTyMap[STy] = complexity;
+      // errs() << "complexity : " << complexity << "\n";
+    }
+    errs() << "recursive types:\n";
+    errs() << "=======================================\n";
+    for (auto const & I : recursiveTypes){
+      errs() << *I << "\n";
+    }
+
+
+      
+    errs() << "============== Start to construct StructTyMap ===============\n";
+
+    // construct StructTyMap
+    for (auto *STy : StructTypes){
+      int complexity = 0;
+      errs() << "Type: " << *STy << "\n";
+      complexity = evaluateStructTy(STy);
+      StructTyMap[STy] = complexity;
+      errs() << "complexity : " << complexity << "\n";
+    }    
+
+    errs() << "=========== Start to generate profiling data...=============\n";
+
+#if 1
+    int fid = 0;
     ofstream func_id_file;
-    func_id_file.open("./thttpd/thttpd_func_id_map.txt");
+    //       func_id_file.open("./thttpd/thttpd_func_id_map.txt");
+    //    func_id_file.open("./ssh/ssh_func_id_map.txt");
+
+    func_id_file.open("./telnet/telnet_func_id_map.txt");
+
 
     set<CallPair> testS;
     for (Function &F : M){
@@ -349,10 +519,12 @@ struct GetCallGraph : public ModulePass {
 	      }
 	    }
 	    if (!inCG){
-	      errs() << "before computeEdgeComplexity...\n";
-	      ce.type_complexity = computeEdgeComplexity(CI->getCalledFunction());
-	      errs() << "after computeEdgeComplexity...\n";
-	      errs() << "CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << ce.type_complexity << "\n"; 
+	      //	      errs() << "before computeEdgeComplexity...\n";
+	      // plus one, dongrui will do minus one in his algorithm later
+	      ce.type_complexity = computeEdgeComplexity(CI->getCalledFunction()) + 1;
+	      //    errs() << "after computeEdgeComplexity...\n";
+	      errs() << "\n CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << ce.type_complexity << "\n"; 
+	      errs() << "FunctionTy: " << *CI->getCalledFunction()->getFunctionType() << "\n";
 	      CG.push_back(ce);
 	    } 
 	  }
@@ -366,8 +538,10 @@ struct GetCallGraph : public ModulePass {
     errs() << "call graph size: " << CG.size() << "\n";
     errs() << "non redundant call edges: " << testS.size() << "\n";
 
-    readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout");
-    // readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.calltimes");
+    //    readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout.txt");
+    //    readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.calltimes");
+    //    readCallTimesFromPin(callPairsFromPin, "./wget/wget.pin.output");
+    readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.output");
 
     set<string> invokedF;
     for (const auto& P : callPairsFromPin){
@@ -380,14 +554,15 @@ struct GetCallGraph : public ModulePass {
 
 	if (P.caller == E.caller && P.callee == E.callee){
 	  E.call_times++;
-	  //	  errs() << "Found runtime call " << E.caller << " " << E.callee << "\n";
+	  errs() << "Found runtime call " << E.caller << " " << E.callee << "\n";
 	}
       }
     }
 
-    string sourceFunc = "auth_check2";
-    //string sourceFunc = "sshkey_parse_private2";
-
+    //        string sourceFunc = "auth_check2";
+    //	string sourceFunc = "sshkey_parse_private2";
+    //    string sourceFunc = "fd_read_body";
+    string sourceFunc = "process_rings";
 
     errs() << "invoked funcs: " << invokedF.size() << "\b";
     errs() << "sensitive func: " << funcDict[sourceFunc] << "\n";
@@ -396,8 +571,10 @@ struct GetCallGraph : public ModulePass {
 
     findEdgesWithLeak(CG, PDG->edgesWithParamLeak, PDG->edgesWithReturnLeak);
 
-    printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
-    //   printCallGraphToFile(CG, "./ssh/ssh.callgraph");
+    //       printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
+    //    printCallGraphToFile(CG, "./ssh/ssh.callgraph");
+    //       printCallGraphToFile(CG, "./wget/wget.callgraph");
+       printCallGraphToFile(CG, "./telnet/telnet.callgraph");
 
     errs() << "CallPairsFromPin: " << callPairsFromPin.size() << "\n";
 
@@ -412,11 +589,16 @@ struct GetCallGraph : public ModulePass {
 
 
     //   printFidSizeSetToFile(fidSizeSet, "./thttpd_id_code_size.txt");
-    //   printFidSizeSetToFile(fidSizeSet, "./ssh_id_code_size.txt");
+    //       printFidSizeSetToFile(fidSizeSet, "./ssh_id_code_size.txt");
+    //       printFidSizeSetToFile(fidSizeSet, "./wget/wget_id_code_size.txt");
+       printFidSizeSetToFile(fidSizeSet, "./telnet/telnet_id_code_size.txt");
+
+
     fidSizeSet.clear();
     callPairsFromPin.clear();
     errs() << "===============END GetCallGraph Pass runOnModule: ===============" << "\n";
 
+#endif
     return false;
   }
 };
@@ -430,156 +612,3 @@ static RegisterPass<GetCallGraph> GCG("get-call-graph", "Get Call Graph Pass",
 
 
 
-//      printCallSiteToFile(cswSet);
-//      readCallSiteFromFile(cswSetFromFile, "CallSiteStat.txt");
-//     errs() << "SetFromFile" << cswSetFromFile.size() << "\n";
-/*
-  for(auto const& E: cswSetFromFile){
-  errs() << E->id << " " << E->func << " " << E->dir << " " << E->file << " " << E->line << " " << E->calltimes << "\n";
-  }
-
-  cswSetFromFile.clear();
-
-
-  gcovDict.clear();
-  cswSet.clear();
-*/
-
-
-
-#if 0
-//auto scope = i->getDebugLoc().getScope(M->getContext())->getFileName();
-MDNode *MDN = I.getMetadata("dbg");
-DILocation loc(MDN);  
-
-auto filename = loc.getFilename().str(); 
-auto dir = loc.getDirectory().str();
-auto line = loc.getLineNumber();
-errs() << "in file: " << filename << " Line: " << line << "\n";
-
-//get call times in the corresponding .c.gcov
-string calltimespath = call_times_path + "/" + filename + ".gcov.in.calltimesonly";
-errs() << "DEBUG:" << calltimespath << "\n";
-//if defined in a header file, skip
-
-if(existedFiles.find(calltimespath) == existedFiles.end()){
-  errs() << "DEBUG: calltimespath:" << calltimespath << " cannot be found in repo, so skip\n";
-  continue;
- }
-		      
-errs() << "call times at this loc: " << gcovDict[calltimespath][line-1] << "\n";
-int ct = gcovDict[calltimespath][line-1];
-CallSiteWrapper* CSW = new CallSiteWrapper(call_site_id, &I, callee->getName(), filename, dir, line, ct);
-call_site_id++;
-cswSet.insert(CSW);
-errs() << "cswSet.size = " << cswSet.size() << "\n";
-#endif
-
-
-
-int readCallTimesFromFilesOld(const std::string& dir, 
-			      map<string, vector<int> >& gcovDict)
-{
-  ifstream infile;
-  string filepath;
-  DIR *dp;
-  struct dirent *dirp;
-  struct stat filestat;
-
-  errs() << "dir to get files of:" << dir << "\n";
-
-  dp = opendir( dir.c_str() );
-  if (dp == NULL){
-    errs() << "Error(" << errno << ") opening " << dir << "\n";
-    return errno;
-  }
-
-  while ((dirp = readdir( dp ))){
-    filepath = dir + "/" + dirp->d_name;
-    // If the file is a directory (or is in some way invalid) we'll skip it e.g. ("." "..")
-    if (stat( filepath.c_str(), &filestat )) continue;
-    if (S_ISDIR( filestat.st_mode ))         continue;
-    errs() << "filepath: " << filepath << "\n";
-
-    // Endeavor to read a single number from the file and display it
-    infile.open( filepath.c_str() );
-    if(!infile.is_open()){
-      errs() << "Faile to open calltimes file: " << filepath << "\n";
-      exit(1);
-    }
-    existedFiles.insert(filepath);
-
-    vector<int> calltimes_for_this_file;
-    int num;
-    while(infile >> num){
-      calltimes_for_this_file.push_back(num);
-    }
-    //map filepath to its calltimes vector in memory
-    gcovDict[filepath] = calltimes_for_this_file;
-    infile.close();
-  }
-  closedir( dp );
-  return 0;
-}
-
-
-/*
-  void printCallSiteToFile(set<CallSiteWrapper*>& S){
-  ofstream outfile;
-  outfile.open(call_site_stat);
-  
-  for(auto const &cs : S){
-  //    outfile << cs->id " " << cs->inst->getParent()->getParent()->getName().str() << " " << cs->func << " " 
-  //	    << cs->dir << " " << cs->file << " " << cs->line << " " << cs->calltimes << "\n";
-  outfile << cs->inst->getParent()->getParent()->getName().str() << " " << cs->func << " " << cs->calltimes << "\n";
-  }
-  outfile.close();
-  }
-*/
-
-
-//      errs() << "============================= Get Call Graph from the PDG ==================================\n";
-/*     
-       errs() << "============== Read call times from ***.c.gcov.calltimesonly files and record: ==============" << "\n";
-       if (0 != readCallTimesFromFiles(call_times_path, gcovDict))
-       errs() << "readCallTimesFromFiles failed...\n";
-
-       errs() << "gcovDict size = " << gcovDict.size() << "\n";
-*/
-
-
-/*
-void findEdgesWithImplicitLeak(vector<CallEdge>& CG, string source){
-
-  errs() << "sourceFunc: " << source << "\n";
-
-  queue<string> worklist;
-  worklist.push(source);
-  set<string> visitedF;
-
-  while(!worklist.empty()){
-    string curr = worklist.front();
-    worklist.pop();
-    errs() << "curr: " << curr << "\n";
-    for(auto &E : CG){
-      if(E.callee == curr && 
-	 visitedF.find(E.caller) == visitedF.end()){
-	//	errs() << "implicit leak source function found!\n";
-	E.implicit_leak = 1;
-	visitedF.insert(E.caller);
-	worklist.push(E.caller);
-      }
-    }
-    errs() << "worklist size: " << worklist.size() << "\n";
-  }
-}
-
-void findEdgesWithForwardLeak(vector<CallEdge>& CG, const set<string>& S){
-  for (auto &E : CG){
-    if(S.find(E.caller) != S.end() && S.find(E.callee) != S.end()){
-      errs() << "Edge with forward leak: " << E.caller << " ---> " << E.callee << "\n";
-      E.explicit_leak = 1;
-    }
-  }
-}
-*/

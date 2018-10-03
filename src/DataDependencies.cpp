@@ -40,14 +40,14 @@ char DataDependencyGraph::ID = 0;
 
 bool DataDependencyGraph::runOnFunction(llvm::Function &F)
 {
-  errs() << "++++++++++++++++++++++++++++++ DataDependency::runOnFunction +++++++++++++++++++++++++++++" << '\n'; 
-  errs() << "Function name:" << F.getName().str() << '\n';
+  //  errs() << "++++++++++++++++++++++++++++++ DataDependency::runOnFunction +++++++++++++++++++++++++++++" << '\n'; 
+  //errs() << "Function name:" << F.getName().str() << '\n';
 
   InstructionWrapper::constructInstMap(F);
   //  AliasAnalysis &AA = getAnalysis<AliasAnalysis>();
   FlowDependenceAnalysis& MDA = getAnalysis<FlowDependenceAnalysis>();
 
-  errs() << "After getAnalysis<FlowDependenceAnalysis>()" << '\n';
+  //  errs() << "After getAnalysis<FlowDependenceAnalysis>()" << '\n';
 
   for(inst_iterator instIt = inst_begin(F), E = inst_end(F); instIt != E; ++instIt){
 
