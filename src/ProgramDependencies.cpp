@@ -66,21 +66,6 @@ typedef struct S{
   struct S* next;
 }tnameS;
 
-/*
-  typedef struct {
-  string val;
-  unsigned lineNum;
-  }PrivateValue;
-
-  class rule:greater<PrivateValue>
-  {
-  public:
-  bool operator () (PrivateValue p1,PrivateValue p2) const{
-  return p1.lineNum < p2.lineNum;
-  }
-  };*/
-
-
 //unsigned getLine() const in DebugLoc.h
 std::map<llvm::Value*, std::set<string> > privateMap;
 //map each alloca into a status(bool), if true means this alloca now is sensitive,otherwise not
@@ -95,6 +80,10 @@ AliasAnalysis* ProgramDependencyGraph::Global_AA = nullptr;
 
 std::map<const llvm::Function *,FunctionWrapper *> FunctionWrapper::funcMap;
 std::map<const llvm::CallInst *,CallWrapper * > CallWrapper::callMap;
+
+std::map<const llvm::Value*, set<Function*> > globalTaintedFuncMap;
+
+
 
 std::set<llvm::Value*> allPtrSet;
 std::vector<llvm::Value*> sensitive_values;
@@ -392,6 +381,17 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
     InstructionWrapper::nodes.insert(globalW);
     InstructionWrapper::globalList.insert(globalW);
     
+    // immutable global, e.g. @str = "printf..."
+    if ((*globalIt).isConstant()){
+      errs() << "constant global: " << *globalW->getValue() << "\n";
+    }
+    
+    if (!(*globalIt).isConstant()){
+      errs() << "mutable global: " << *globalW->getValue() << "\n";
+      InstructionWrapper::nonConstantGlobalList.insert(globalW);
+    }
+
+
     //find all global pointer values and insert them into a list
     if(globalW->getValue()->getType()->getContainedType(0)->isPointerTy())
       gp_list.push_back(globalW);
@@ -557,18 +557,37 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      nodeIt2 != InstructionWrapper::funcInstWList[&*F].end(); ++nodeIt2){
 	    InstructionWrapper *InstW2 = *nodeIt2;
   
-	    //process all globals see whether dependency exists
+	    //process all non constant globals see whether dependency exists
 	    if(InstW2->getType() == INST && isa<LoadInst>(InstW2->getInstruction())){
 
 	      LoadInst* LI2 = dyn_cast<LoadInst>(InstW2->getInstruction());
 	      
-	      for(std::set<InstructionWrapper *>::const_iterator gi = InstructionWrapper::globalList.begin(); 
-		  gi != InstructionWrapper::globalList.end(); ++gi){	   
+	      for(std::set<InstructionWrapper *>::const_iterator gi = InstructionWrapper::nonConstantGlobalList.begin(); 
+		  gi != InstructionWrapper::nonConstantGlobalList.end(); ++gi){	   
 		if(LI2->getPointerOperand() == (*gi)->getValue()){
 		  PDG->addDependency(*gi, InstW2, GLOBAL_VALUE);
+		  globalTaintedFuncMap[(*gi)->getValue()].insert(InstW2->getFunction());
 		}		
 	      }// end searching globalList
-	    }//end procesing load for global
+	    }//end processing load for global
+
+
+	    if (InstW2->getType() == INST && isa<StoreInst>(InstW2->getInstruction())){
+	      StoreInst* SI2 = dyn_cast<StoreInst>(InstW2->getInstruction());
+	      for(std::set<InstructionWrapper *>::const_iterator gi = InstructionWrapper::nonConstantGlobalList.begin(); 
+		  gi != InstructionWrapper::nonConstantGlobalList.end(); ++gi){	   
+		if(SI2->getPointerOperand() == (*gi)->getValue()){
+		  // TODO: maybe some circles?
+		  PDG->addDependency(*gi, InstW2, GLOBAL_VALUE);
+		  globalTaintedFuncMap[(*gi)->getValue()].insert(InstW2->getFunction());
+		}		
+	      }// end searching globalList
+	    }// end processing store to global
+
+	    
+
+
+
 
 	    if(InstW->getType() == INST){	       
 	      if (ddgGraph.DDG->depends(InstW, InstW2)) {
@@ -640,6 +659,17 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       }// end if (auto...
     }// end for (int i ...
   }//end if (global_annos)
+
+
+  for (auto const &gf : globalTaintedFuncMap){
+    errs() << "gf: " << *(gf.first) << " tainted funcs: " << (gf.second).size() << "\n";
+    for (auto const &F : gf.second){
+      errs() << " " << F->getName() << "\n";
+    }
+  }
+
+
+
 
   errs() << "DEBUG shen \n";
 

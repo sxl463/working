@@ -40,6 +40,8 @@ std::set<InstructionWrapper *> InstructionWrapper::nodes;
 
 std::set<InstructionWrapper *> InstructionWrapper::globalList;
 
+std::set<InstructionWrapper *> InstructionWrapper::nonConstantGlobalList;
+
 std::map<const llvm::Instruction *,InstructionWrapper *> InstructionWrapper::instMap;
 
 std::map<const llvm::Function*, std::set<InstructionWrapper*> > InstructionWrapper::funcInstWList;

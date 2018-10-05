@@ -271,6 +271,7 @@ namespace cot
 
     static std::set<InstructionWrapper *> nodes;
     static std::set<InstructionWrapper *> globalList;
+    static std::set<InstructionWrapper *> nonConstantGlobalList;
     static std::map<const llvm::Instruction *,InstructionWrapper *> instMap;
     static std::map<const llvm::Function*, std::set<InstructionWrapper*> > funcInstWList;
 

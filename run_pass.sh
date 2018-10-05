@@ -41,10 +41,11 @@ if [ "$1" != "" ]; then
 #	$OPT -load ./pdg.so -smack-ds-aa -pdg -get-call-graph -dot-pdg -debug-pass=Structure -time-passes < $1 > /dev/null
 
 # get call times, type complexity, and leak
-	$OPT -load ./pdg.so -smack-ds-aa -pdg -get-call-graph -debug-pass=Structure -time-passes < $1 > /dev/null
+
+#	$OPT -load ./pdg.so -smack-ds-aa -pdg -get-call-graph -debug-pass=Structure -time-passes < $1 > /dev/null
 
 #	$OPT -load ./pdg.so -smack-ds-aa -get-call-graph -debug-pass=Structure -time-passes < $1 > /dev/null
-#	$OPT -load ./pdg.so -smack-ds-aa -pdg -debug-pass=Structure -time-passes < $1 > /dev/null
+	$OPT -load ./pdg.so -smack-ds-aa -pdg -debug-pass=Structure -time-passes < $1 > /dev/null
 
 #	mv *.dot ./visualization
 
