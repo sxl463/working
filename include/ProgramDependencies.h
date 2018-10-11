@@ -59,6 +59,7 @@ namespace cot {
     set<FunctionWrapper*> insFuncs;
     vector<pair<string, string> > edgesWithParamLeak;
     vector<pair<string, string> > edgesWithReturnLeak;
+    map<Value*, set<Function*> > globalTaintedFuncMap;
 
     ProgramDependencyGraph() : llvm::ModulePass(ID){
       PDG = new ProgramDepGraph();
@@ -79,6 +80,9 @@ namespace cot {
     void connectFunctionAndFormalTrees(Function *callee);
     int connectCallerAndCallee(InstructionWrapper *CInstW, llvm::Function *callee);
     //    int connectCallerAndCallee(CallInst *CI, llvm::Function *callee);
+
+    void FindGlobalsInReadAndWrite(InstructionWrapper* InstW, 
+				   map<Value*, set<Function*> >& globalTaintedFuncMap);
 
     bool runOnModule(llvm::Module &M);
 

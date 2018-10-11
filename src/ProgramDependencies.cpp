@@ -81,7 +81,7 @@ AliasAnalysis* ProgramDependencyGraph::Global_AA = nullptr;
 std::map<const llvm::Function *,FunctionWrapper *> FunctionWrapper::funcMap;
 std::map<const llvm::CallInst *,CallWrapper * > CallWrapper::callMap;
 
-std::map<const llvm::Value*, set<Function*> > globalTaintedFuncMap;
+
 
 
 
@@ -253,12 +253,12 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
 
   // If this ReturnInst not in nodes yet, insert first
   /*
-  if(InstructionWrapper::instMap.find(RI) == InstructionWrapper::instMap.end()){
+    if(InstructionWrapper::instMap.find(RI) == InstructionWrapper::instMap.end()){
     InstructionWrapper *iw = new InstructionWrapper(RI, InstW->getFunction(), INST);
     InstructionWrapper::nodes.insert(iw);
     InstructionWrapper::instMap[RI] = iw;
     InstructionWrapper::funcInstWList[InstW->getFunction()].insert(iw);
-  }
+    }
   */
   for(std::set<InstructionWrapper*>::iterator nodeIt = InstructionWrapper::nodes.begin();
       nodeIt != InstructionWrapper::nodes.end(); ++nodeIt){
@@ -357,9 +357,64 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
   //end if PARAMETER_TREE
 #endif
 
-
   return 0;
 }
+
+
+void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW,
+						       map<Value*, set<Function*> >& globalTaintedFuncMap){
+  Instruction *I = InstW->getInstruction();
+  if(I == nullptr){
+    errs() << "Wrong input in FindGlobalsInReadAndWrite\n";
+    exit(1);
+  }
+
+  // process GetElementPtr 1. GetElementPtr 2. Load 3. Store
+  if(InstW->getType() == INST && !InstW->getAccess())
+    {
+      if(isa<GetElementPtrInst>(I)){
+	GetElementPtrInst* GPI = dyn_cast<GetElementPtrInst>(I); 
+	if(isa<GlobalVariable>(GPI->getPointerOperand())){
+	  errs() << "GLOBAL_in_GetElementptrInst: " << *I<< "\n";
+	  errs() << "ptr: " << *GPI->getPointerOperand() << "\n" << "is a GlobalVariable\n";
+	  globalTaintedFuncMap[GPI->getPointerOperand()].insert(InstW->getFunction());
+	}
+	InstW->setAccess(true);
+      }
+
+      if(isa<LoadInst>(I)){
+	LoadInst* LI = dyn_cast<LoadInst>(I);
+	Value* ptr = LI->getPointerOperand();
+	GEPOperator* gop = dyn_cast<GEPOperator>(ptr);
+	if(gop != nullptr && isa<GlobalVariable>(gop->getPointerOperand())){
+	  errs() << "GEPOperator(load): " << *gop << "\n" << "is a GEPOperator\n";
+	  errs() << "GLOBAL_in_GEPOperator: " << *gop->getPointerOperand() << "\n";
+	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
+	}
+	InstW->setAccess(true);
+      }
+      if(isa<StoreInst>(I)){
+	StoreInst* SI = dyn_cast<StoreInst>(I);
+	Value* ptr = SI->getPointerOperand();
+	GEPOperator* gop = dyn_cast<GEPOperator>(ptr);
+	if(gop != nullptr && isa<GlobalVariable>(gop->getPointerOperand())){
+	  errs() << "GEPOperator(store): " << *gop << "\n" << "is a GEPOperator\n";
+	  errs() << "GLOBAL_in_GEPOperator: " << *gop->getPointerOperand() << "\n";
+	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
+	}
+	InstW->setAccess(true);
+      }	      
+    }
+}
+
+
+
+
+
+
+
+
+
 
 
 bool ProgramDependencyGraph::runOnModule(Module &M)
@@ -544,13 +599,29 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      if(callee->getName() == "auth_check2"){
 		errs() << *CI << "\n";
 	      }
-
 	     
 	      //take recursive callInst as common callInst
 	      if(0 == connectCallerAndCallee(InstW, callee)){
 		InstW->setAccess(true);
 	      }
+
+	      // common callee function, see if there is global variable in the CallInst's arg list
+
+	      errs() << "callinst: " << *CI << "\n";
+	      int argNum = CI->getNumArgOperands();
+	      //  errs() << "argNum: " << argNum << "\n";
+	      for(int i = 0; i < argNum; i++){
+		Value* argi = CI->getArgOperand(i);
+		errs() << *argi << "\n";
+		if (isa<GlobalVariable>(argi)){
+		  errs() << "arg is global\n";
+		  errs() << "function uses this global: " << InstW->getFunction()->getName() << "\n";
+		  globalTaintedFuncMap[argi].insert(InstW->getFunction());		  
+		}
+	      }
 	    }//end callnode
+	  if(pInstruction != nullptr)
+	    FindGlobalsInReadAndWrite(InstW, globalTaintedFuncMap);
 
 	  //second iteration on nodes to add both control and data Dependency
 	  for(std::set<InstructionWrapper*>::iterator nodeIt2 = InstructionWrapper::funcInstWList[&*F].begin();
@@ -661,9 +732,9 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   }//end if (global_annos)
 
 
-  for (auto const &gf : globalTaintedFuncMap){
+  for (auto &gf : globalTaintedFuncMap){
     errs() << "gf: " << *(gf.first) << " tainted funcs: " << (gf.second).size() << "\n";
-    for (auto const &F : gf.second){
+    for (auto &F : gf.second){
       errs() << " " << F->getName() << "\n";
     }
   }
@@ -728,10 +799,10 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	InstructionWrapper *adjacent_InstW = 
 	  *InstructionWrapper::nodes.find(const_cast<InstructionWrapper*>(DNode->getDependencyList()[i].first->getData())); 
 	/*
-       	if(InstW->getInstruction()!= nullptr && adjacent_InstW->getInstruction() != nullptr)
+	  if(InstW->getInstruction()!= nullptr && adjacent_InstW->getInstruction() != nullptr)
 	  errs() << "Curr: " << *InstW->getInstruction() << " --- " << *adjacent_InstW->getInstruction()<<"\n";
 	
-       	if(isa<ReturnInst>(InstW->getInstruction()) && adjacent_InstW->getType() == ENTRY)
+	  if(isa<ReturnInst>(InstW->getInstruction()) && adjacent_InstW->getType() == ENTRY)
 	  errs() << "Curr: " << *InstW->getInstruction() << " --> " << "ENTRY: " << adjacent_InstW->getFunction()->getName() << "\n";
 	*/
 
@@ -810,11 +881,50 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   insFuncs = ins_FuncSet;
 
   /*
-  errs() << "=========================== Sensitive Functions List ============================= \n";
-  for(auto const &F : senFuncs){
+    errs() << "=========================== Sensitive Functions List ============================= \n";
+    for(auto const &F : senFuncs){
     errs() << F->getFunction()->getName() << "\n";
     }*/
 
+
+
+  for (auto &gf : globalTaintedFuncMap){
+    errs() << "gf: " << *(gf.first) << " tainted funcs: " << (gf.second).size() << "\n";
+    for (auto &F : gf.second){
+      errs() << " " << F->getName() << "\n";
+    }
+  }
+
+
+
+  ofstream outfile;
+  //  outfile.open("./thttpd/global_func_map.txt");
+  //  outfile.open("./ssh/global_func_map_ssh.txt");
+  //  outfile.open("./wget/global_func_map_wget.txt");
+  outfile.open("./telnet/global_func_map_telnet.txt");
+  if (!outfile.is_open()){
+    errs() << "Fail to open global_func_map.txt, file can't be opened!\n ";
+    exit(0);
+  }
+  
+
+  int gvID = 0;
+  for(auto &gf : globalTaintedFuncMap){
+    //    GlobalValue *gv = dyn_cast<GlobalValue>(gf.first);
+    std::string Str;
+    raw_string_ostream OS(Str);
+
+    OS << *(gf.first);
+    string gv = OS.str();
+    unsigned first = gv.find("@");
+    unsigned last = gv.find("=") - 1;
+    string strnew = gv.substr(first, last-first);
+
+    outfile << gvID++ << " " << strnew << " " << (gf.second).size() << "\n";
+    for (auto &F : gf.second)
+      outfile << F->getName().str() << "\n";
+  }
+  outfile.close();
 
 
 
