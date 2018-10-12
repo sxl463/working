@@ -381,7 +381,6 @@ void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW
 	}
 	InstW->setAccess(true);
       }
-
       if(isa<LoadInst>(I)){
 	LoadInst* LI = dyn_cast<LoadInst>(I);
 	Value* ptr = LI->getPointerOperand();
@@ -405,6 +404,7 @@ void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW
 	InstW->setAccess(true);
       }	      
     }
+  return;
 }
 
 
@@ -898,10 +898,10 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 
 
   ofstream outfile;
-  //  outfile.open("./thttpd/global_func_map.txt");
+  outfile.open("./thttpd/global_func_map_thttpd.txt");
   //  outfile.open("./ssh/global_func_map_ssh.txt");
   //  outfile.open("./wget/global_func_map_wget.txt");
-  outfile.open("./telnet/global_func_map_telnet.txt");
+  //  outfile.open("./telnet/global_func_map_telnet.txt");
   if (!outfile.is_open()){
     errs() << "Fail to open global_func_map.txt, file can't be opened!\n ";
     exit(0);

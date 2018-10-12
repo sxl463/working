@@ -128,6 +128,9 @@ set<string> funcSet;
 map<string, int> funcDict;
 set<FidSize*> fidSizeSet;
 
+// string: global name, int: id
+map<string, int> globalDict;
+
 
 static set<string> existedFiles;
 
@@ -495,6 +498,9 @@ struct GetCallGraph : public ModulePass {
       FidSize *pfs = new FidSize(F.getName(), fid, NumInsts);
       fidSizeSet.insert(pfs);
       fid++;
+      errs() << "fid: " << fid << "\n"; 
+
+
 
       for(BasicBlock &B : F){
 	for(Instruction &I : B){
