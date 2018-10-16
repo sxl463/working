@@ -101,18 +101,13 @@ void ProgramDependencyGraph::connectAllPossibleFunctions(InstructionWrapper* CIn
   for(; FI != FE; ++FI){
     if((*FI).first->getFunctionType() == funcTy && (*FI).first->getName() != "main"){
       errs() << (*FI).first->getName() << " function pointer! \n";
-
       //TODO:
       //color a ret node in callee(func ptr)randomly as long as we can combine them together with caller
-
     }
   }
 }
 
-
-
-void ProgramDependencyGraph::drawFormalParameterTree(Function* func, TreeType treeTy)
-{
+void ProgramDependencyGraph::drawFormalParameterTree(Function* func, TreeType treeTy){
   for(list<ArgumentWrapper*>::iterator argI = FunctionWrapper::funcMap[func]->getArgWList().begin(),
 	argE = FunctionWrapper::funcMap[func]->getArgWList().end(); argI != argE; ++argI){
     for(tree<InstructionWrapper*>::iterator TI = (*argI)->getTree(treeTy).begin(), 
@@ -129,8 +124,7 @@ void ProgramDependencyGraph::drawFormalParameterTree(Function* func, TreeType tr
   }//end for list
 }
 
-void ProgramDependencyGraph::drawActualParameterTree(CallInst* CI, TreeType treeTy)
-{      
+void ProgramDependencyGraph::drawActualParameterTree(CallInst* CI, TreeType treeTy){      
   for(list<ArgumentWrapper*>::iterator argI = CallWrapper::callMap[CI]->getArgWList().begin(),
 	argE = CallWrapper::callMap[CI]->getArgWList().end(); argI != argE; ++argI){
 
@@ -149,9 +143,6 @@ void ProgramDependencyGraph::drawActualParameterTree(CallInst* CI, TreeType tree
 }
 
 void ProgramDependencyGraph::connectFunctionAndFormalTrees(llvm::Function *callee){
-
-  //  errs() << "DEBUG 152: In connectFunctionAndFormalTrees, callee->getName() : " << callee->getName() << "\n";
-
   for(list<ArgumentWrapper*>::iterator argI = FunctionWrapper::funcMap[callee]->getArgWList().begin(),
 	argE = FunctionWrapper::funcMap[callee]->getArgWList().end(); argI != argE; ++argI){
 
@@ -187,7 +178,6 @@ void ProgramDependencyGraph::connectFunctionAndFormalTrees(llvm::Function *calle
 
 	for(;SI != SE; ++SI){
 	  if((*formal_in_TI)->getFieldType() == (*SI)->getValueOperand()->getType()){
-
 	    for(std::set<InstructionWrapper*>::iterator nodeIt = InstructionWrapper::nodes.begin();
 		nodeIt != InstructionWrapper::nodes.end(); ++nodeIt){
 	
@@ -223,7 +213,6 @@ void ProgramDependencyGraph::connectFunctionAndFormalTrees(llvm::Function *calle
     }//end for (tree formal_in_TI...)
   }//end for arg iteration...
 }
-
 
 
 int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, llvm::Function *callee){
@@ -270,7 +259,6 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
 	  errs() << "auth_check ReturnInst : " << *RI << "InstW is in " << InstW->getFunction()->getName() << "\n";
 	if (callee->getName() == "auth_check2")
 	  errs() << "auth_check2 ReturnInst size: " << *RI << "\n";
-
       }
       //TODO: indirect call, function name??
       else 
@@ -314,7 +302,6 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
 	  actual_out_TI = (*actual_argI)->getTree(ACTUAL_OUT_TREE).begin();  //TI4
 	actual_in_TI != actual_in_TE; ++actual_in_TI, ++formal_in_TI, ++formal_out_TI, ++actual_out_TI){
 
-
       //connect trees: antual-in --> formal-in, formal-out --> actual-out
       PDG->addDependency(*InstructionWrapper::nodes.find(*actual_in_TI), *InstructionWrapper::nodes.find(*formal_in_TI), PARAMETER);
       PDG->addDependency(*InstructionWrapper::nodes.find(*formal_out_TI), *InstructionWrapper::nodes.find(*actual_out_TI), PARAMETER);
@@ -323,7 +310,6 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
 
     //TODO: why removing this debugging infor will cause segmentation fault?
  
-
     //3. ACTUAL_OUT --> LoadInsts in #Caller# function
     for(tree<InstructionWrapper*>::iterator actual_out_TI = (*actual_argI)->getTree(ACTUAL_OUT_TREE).begin(),
 	  actual_out_TE = (*actual_argI)->getTree(ACTUAL_OUT_TREE).end(); actual_out_TI != actual_out_TE; ++actual_out_TI){
@@ -402,7 +388,13 @@ void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW
 	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
 	}
 	InstW->setAccess(true);
-      }	      
+      }
+      /*
+      // CallInst
+      if(isa<CallInst>(I)){
+	CallInst* CI = dyn_cast<StoreInst>(I);
+	}*/
+	      
     }
   return;
 }
@@ -610,15 +602,35 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      errs() << "callinst: " << *CI << "\n";
 	      int argNum = CI->getNumArgOperands();
 	      //  errs() << "argNum: " << argNum << "\n";
+	      
+	      map<Argument*, Value*> ParamArgMap;
 	      for(int i = 0; i < argNum; i++){
 		Value* argi = CI->getArgOperand(i);
 		errs() << *argi << "\n";
 		if (isa<GlobalVariable>(argi)){
-		  errs() << "arg is global\n";
+		  errs() << "The "<< i << "th arg is global\n";
 		  errs() << "function uses this global: " << InstW->getFunction()->getName() << "\n";
-		  globalTaintedFuncMap[argi].insert(InstW->getFunction());		  
+		  globalTaintedFuncMap[argi].insert(InstW->getFunction());	
+		  
+		  // go to callee function body
+		  int j = 0;
+		  for(Function::arg_iterator ai = CI->getCalledFunction()->arg_begin(); ai != CI->getCalledFunction()->arg_end(); ++ai){
+		    //  errs() << "ai: " << *ai << "\n";
+
+		    if(j == i){
+		      errs() << "*argi:" << *argi << " | *ai: " << *ai << "\n";
+		      ParamArgMap[ai] = argi;
+		    }
+		    j++;
+		  }
 		}
 	      }
+	      errs() << "ParamArgMap size: " << ParamArgMap.size() << "\n";
+
+	      // for CallInst we need to handle the arglist specially, to deal with related globals
+	      
+
+
 	    }//end callnode
 	  if(pInstruction != nullptr)
 	    FindGlobalsInReadAndWrite(InstW, globalTaintedFuncMap);

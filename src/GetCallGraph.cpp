@@ -105,6 +105,25 @@ public:
   }
 };
 
+class CallEdgeWithGlobal{
+public:
+  string caller;
+  string callee;
+  int call_times;
+  float type_complexity;
+  int param_leak;
+  int return_leak;
+
+  CallEdgeWithGlobal(string _caller, string _callee, int _call_times, float _type_complexity){
+    caller = _caller;
+    callee = _callee;
+    call_times = _call_times;
+    type_complexity = _type_complexity;
+    param_leak = 0;
+    return_leak = 0; 
+  }
+};
+
 
 extern std::set<FunctionWrapper*> sen_FuncSet;
 extern std::set<FunctionWrapper*> ins_FuncSet;
@@ -120,9 +139,9 @@ set<CallSiteWrapper*> cswSetFromFile;
 vector<CallPair> callPairsFromPin;
 
 vector<CallEdge> CG; // static call graph
+vector<CallEdge> GlobalCG; // static call graph, only for global variables
 
-
-map<string, vector<int> > gcovDict;
+//map<string, vector<int> > gcovDict;
 
 set<string> funcSet;
 map<string, int> funcDict;
@@ -130,7 +149,6 @@ set<FidSize*> fidSizeSet;
 
 // string: global name, int: id
 map<string, int> globalDict;
-
 
 static set<string> existedFiles;
 
@@ -473,10 +491,10 @@ struct GetCallGraph : public ModulePass {
 #if 1
     int fid = 0;
     ofstream func_id_file;
-    //       func_id_file.open("./thttpd/thttpd_func_id_map.txt");
+          func_id_file.open("./thttpd/thttpd_func_id_map.txt");
     //    func_id_file.open("./ssh/ssh_func_id_map.txt");
-
-    func_id_file.open("./telnet/telnet_func_id_map.txt");
+    //    func_id_file.open("./wget/wget_func_id_map.txt");
+    //    func_id_file.open("./telnet/telnet_func_id_map.txt");
 
 
     set<CallPair> testS;
