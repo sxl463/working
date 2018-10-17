@@ -1,0 +1,442 @@
+0 @hostname 3
+status
+tn
+netflush
+1 @new_tc 3
+TerminalSpecialChars
+process_rings
+telsnd
+2 @stderr 12
+slccmd
+toggle
+unsetcmd
+setcmd
+sendcmd
+modecmd
+send_tncmd
+env_send
+env_cmd
+SetNetTrace
+SetForExit
+ExitString
+3 @start 2
+status
+main
+4 @end 1
+status
+5 @cpu_time_used 1
+status
+6 @binmode 1
+togbinary
+7 @rcname 1
+cmdrc
+8 @envlisthead 3
+env_define
+env_list
+env_find
+9 @environ 1
+env_init
+10 @env_default.nep 1
+env_default
+11 @line 3
+command
+cmdrc
+tn
+12 @stdin 5
+command
+setescape
+tn
+init_sys
+TerminalWindowSize
+13 @margc 4
+command
+makeargv
+cmdrc
+tn
+14 @margv 2
+command
+cmdrc
+15 @stdout 11
+status
+togcrmod
+setescape
+init_network
+init_sys
+TerminalFlushOutput
+SetNetTrace
+Dump
+printoption
+printsub
+SetForExit
+16 @netoring 31
+sendcmd
+send_esc
+env_opt_end
+init_network
+setneturg
+netflush
+send_do
+send_dont
+send_will
+send_wont
+lm_will
+lm_do
+lm_mode
+slc_import
+slc_end_reply
+sendnaws
+Scheduler
+xmitAO
+xmitEL
+xmitEC
+dosynch
+get_status
+intp
+sendbrk
+sendabort
+sendsusp
+sendeof
+sendayt
+suboption
+telsnd
+doflush
+17 @netiring 5
+init_network
+process_rings
+telrcv
+Scheduler
+SetForExit
+18 @ring_clock 2
+ring_supplied
+ring_consumed
+19 @old_tc 1
+TerminalNewMode
+20 @tout 5
+init_sys
+TerminalWrite
+TerminalNewMode
+process_rings
+EmptyTerminal
+21 @tin 4
+init_sys
+TerminalRead
+TerminalNewMode
+process_rings
+22 @TerminalNewMode.prevmode 1
+TerminalNewMode
+23 @net 7
+bye
+togdebug
+tn
+stilloob
+netflush
+sys_telnet_init
+process_rings
+24 @local 2
+rlogin_susp
+telsnd
+25 @bol 2
+rlogin_susp
+telsnd
+26 @telnetport 2
+tn
+telnet
+27 @want_status_response 2
+get_status
+printsub
+28 @autosynch 4
+intp
+sendbrk
+sendabort
+sendsusp
+29 @showoptions 2
+printoption
+printsub
+30 @netdata 2
+netflush
+process_rings
+31 @crlf 3
+togcrlf
+TerminalNewMode
+telsnd
+32 @donelclchars 1
+lclchars
+33 @dontlecho 2
+telsnd
+getconnmode
+34 @globalmode 4
+TerminalSpecialChars
+TerminalNewMode
+process_rings
+telsnd
+35 @ttyoring 5
+telrcv
+Scheduler
+init_terminal
+ttyflush
+EmptyTerminal
+36 @ttyiring 4
+process_rings
+Scheduler
+telsnd
+init_terminal
+37 @termdata 2
+process_rings
+ttyflush
+38 @termAytChar 2
+TerminalSaveState
+TerminalDefaultChars
+39 @telcmds 3
+printoption
+optionstatus
+printsub
+40 @telopts 3
+printoption
+optionstatus
+printsub
+41 @slc_names 1
+printsub
+42 @NetTrace 5
+init_network
+SetNetTrace
+Dump
+printoption
+printsub
+43 @NetTraceFile 1
+SetNetTrace
+44 @prettydump 1
+Dump
+45 @control.buf 1
+control
+46 @family 2
+main
+parse_opt
+47 @user 2
+main
+parse_opt
+48 @argp_program_bug_address 1
+main
+49 @options 24
+dolmmode
+status
+togxbinary
+togrbinary
+togbinary
+env_send
+TerminalSpecialChars
+send_do
+send_dont
+send_will
+send_wont
+willoption
+wontoption
+slc_mode_export
+slc_mode_import
+telrcv
+sendnaws
+Scheduler
+get_status
+dooption
+dontoption
+suboption
+telsnd
+getconnmode
+50 @do_dont_resp 4
+send_do
+send_dont
+willoption
+wontoption
+51 @will_wont_resp 4
+send_will
+send_wont
+dooption
+dontoption
+52 @eight 2
+parse_opt
+telnet
+53 @autologin 3
+tn
+main
+parse_opt
+54 @skiprc 2
+cmdrc
+parse_opt
+55 @debug 3
+togdebug
+tn
+parse_opt
+56 @autoflush 6
+xmitAO
+intp
+sendbrk
+sendabort
+sendsusp
+init_terminal
+57 @prompt 2
+command
+main
+58 @kludgelinemode 11
+status
+dokludgemode
+dolinemode
+docharmode
+TerminalSpecialChars
+intr2
+wontoption
+Scheduler
+dooption
+telsnd
+getconnmode
+59 @subpointer 3
+init_telnet
+telrcv
+suboption
+60 @donebinarytoggle 4
+togxbinary
+togrbinary
+togbinary
+init_telnet
+61 @localflow 4
+init_telnet
+telrcv
+suboption
+getconnmode
+62 @ISend 2
+init_telnet
+Scheduler
+63 @In3270 3
+setescape
+init_telnet
+getconnmode
+64 @connected 12
+command
+bye
+cmdrc
+status
+sendcmd
+modecmd
+send_tncmd
+suspend
+shell
+tn
+sendwin
+init_telnet
+65 @restartany 3
+TerminalNewMode
+init_telnet
+suboption
+66 @SYNCHing 5
+TerminalNewMode
+process_rings
+init_telnet
+telrcv
+Scheduler
+67 @escape 8
+status
+send_esc
+set_escape_char
+setescape
+parse_opt
+TerminalNewMode
+init_telnet
+telsnd
+68 @rlogin 8
+command
+set_escape_char
+main
+parse_opt
+TerminalNewMode
+susp
+init_telnet
+telsnd
+69 @echoc 2
+init_telnet
+telsnd
+70 @flushline 9
+init_telnet
+telrcv
+Scheduler
+intp
+sendbrk
+sendabort
+sendsusp
+telsnd
+doflush
+71 @telrcv_state 2
+init_telnet
+telrcv
+72 @clocks 5
+willoption
+wontoption
+telrcv
+telsnd
+getconnmode
+73 @flushout 6
+TerminalNewMode
+process_rings
+willoption
+wontoption
+telrcv
+doflush
+74 @name_unknown 2
+mklist
+gettermname
+75 @unknown 2
+mklist
+gettermname
+76 @termbuf 1
+init_term
+77 @resettermname 2
+bye
+gettermname
+78 @gettermname.tnamep 1
+gettermname
+79 @gettermname.next 1
+gettermname
+80 @str_lm 2
+lm_will
+lm_do
+81 @linemode 4
+dolmmode
+lm_mode
+dontoption
+getconnmode
+82 @str_lm_mode 1
+lm_mode
+83 @localchars 6
+status
+TerminalNewMode
+susp
+intr
+intr2
+slc_init
+84 @spc_data 1
+slc
+85 @slc_mode 4
+slc_init
+slcstate
+slc_mode_export
+slc_mode_import
+86 @slc_replyp 3
+slc_start_reply
+slc_add_reply
+slc_end_reply
+87 @opt_reply 3
+env_opt_start
+env_opt_add
+env_opt_end
+88 @opt_replyend 3
+env_opt_start
+env_opt_add
+env_opt_end
+89 @opt_replyp 4
+env_opt_start
+env_opt_add
+env_opt_end
+env_opt_start_info
+90 @crmod 2
+togcrmod
+telrcv
+91 @subend 2
+telrcv
+suboption

@@ -1,0 +1,516 @@
+0 @terminate 1
+main
+1 @logfile 4
+main
+parse_args
+re_open_logfile
+read_config
+2 @no_log 3
+main
+parse_args
+re_open_logfile
+3 @stdout 1
+main
+4 @max_connects 5
+main
+idle
+update_throttles
+shut_down
+handle_newconnect
+5 @do_chroot 3
+main
+parse_args
+read_config
+6 @dir 3
+main
+parse_args
+read_config
+7 @debug 3
+main
+parse_args
+read_config
+8 @stdin 1
+main
+9 @pidfile 3
+main
+parse_args
+read_config
+10 @argv0 8
+main
+lookup_hostname
+read_throttlefile
+no_value_required
+e_strdup
+usage
+read_config
+value_required
+11 @stats_time 2
+main
+logstats
+12 @start_time 2
+main
+logstats
+13 @stats_connections 3
+main
+handle_newconnect
+thttpd_logstats
+14 @stats_bytes 3
+main
+thttpd_logstats
+really_clear_connection
+15 @stats_simultaneous 3
+main
+handle_newconnect
+thttpd_logstats
+16 @connects 6
+main
+idle
+update_throttles
+shut_down
+handle_newconnect
+really_clear_connection
+17 @first_free_connect 3
+main
+handle_newconnect
+really_clear_connection
+18 @num_connects 4
+main
+handle_usr1
+handle_newconnect
+really_clear_connection
+19 @httpd_conn_count 4
+main
+shut_down
+handle_newconnect
+thttpd_logstats
+20 @count 1
+main
+21 @data_dir 3
+main
+parse_args
+read_config
+22 @got_hup 2
+main
+handle_hup
+23 @got_usr1 2
+main
+handle_usr1
+24 @watchdog_flag 3
+main
+handle_alrm
+occasional
+25 @hostname 4
+main
+parse_args
+lookup_hostname
+read_config
+26 @port 4
+main
+parse_args
+lookup_hostname
+read_config
+27 @cgi_pattern 3
+main
+parse_args
+read_config
+28 @url_pattern 3
+main
+parse_args
+read_config
+29 @local_pattern 3
+main
+parse_args
+read_config
+30 @no_empty_referrers 3
+main
+parse_args
+read_config
+31 @hs 5
+main
+handle_chld
+shut_down
+re_open_logfile
+handle_newconnect
+32 @cgi_limit 3
+main
+parse_args
+read_config
+33 @charset 3
+main
+parse_args
+read_config
+34 @p3p 3
+main
+parse_args
+read_config
+35 @max_age 3
+main
+parse_args
+read_config
+36 @no_symlink_check 3
+main
+parse_args
+read_config
+37 @do_vhost 3
+main
+parse_args
+read_config
+38 @do_global_passwd 3
+main
+parse_args
+read_config
+39 @stderr 8
+main
+lookup_hostname
+read_throttlefile
+no_value_required
+e_strdup
+usage
+read_config
+value_required
+40 @user 3
+main
+parse_args
+read_config
+41 @numthrottles 4
+main
+read_throttlefile
+update_throttles
+check_throttles
+42 @maxthrottles 2
+main
+read_throttlefile
+43 @throttles 8
+main
+read_throttlefile
+update_throttles
+shut_down
+handle_read
+handle_send
+clear_throttles
+check_throttles
+44 @throttlefile 3
+main
+parse_args
+read_config
+45 @httpd_err400title 3
+cgi_interpose_output
+handle_read
+httpd_parse_request
+46 @httpd_err400form 2
+handle_read
+httpd_parse_request
+47 @httpd_err408title 2
+cgi_interpose_output
+idle
+48 @httpd_err408form 1
+idle
+49 @httpd_err503title 4
+cgi
+cgi_interpose_output
+ls
+handle_read
+50 @httpd_err503form 3
+cgi
+ls
+handle_read
+51 @sub_process 5
+cgi
+cgi_child
+post_post_garbage_hack
+ls
+httpd_write_response
+52 @str_alloc_count 2
+httpd_logstats
+httpd_realloc_str
+53 @str_alloc_size 2
+httpd_logstats
+httpd_realloc_str
+54 @really_start_request.indexname 1
+really_start_request
+55 @really_start_request.maxindexname 1
+really_start_request
+56 @really_start_request.index_names 1
+really_start_request
+57 @really_start_request.dirname 1
+really_start_request
+58 @really_start_request.maxdirname 1
+really_start_request
+59 @err404title 3
+really_start_request
+cgi_interpose_output
+ls
+60 @err404form 2
+really_start_request
+ls
+61 @ok200title 3
+really_start_request
+cgi_interpose_output
+ls
+62 @err304title 2
+really_start_request
+cgi_interpose_output
+63 @ok206title 1
+send_mime
+64 @enc_tab 2
+init_mime
+figure_mime
+65 @typ_tab 2
+init_mime
+figure_mime
+66 @httpd_initialize.ghnbuf 1
+httpd_initialize
+67 @err501title 5
+really_start_request
+cgi
+cgi_interpose_output
+ls
+httpd_parse_request
+68 @err501form 4
+really_start_request
+cgi
+ls
+httpd_parse_request
+69 @err500title 6
+really_start_request
+cgi
+cgi_child
+cgi_interpose_output
+ls
+httpd_parse_request
+70 @err500form 5
+really_start_request
+cgi
+cgi_child
+ls
+httpd_parse_request
+71 @err403title 5
+really_start_request
+cgi_interpose_output
+check_referrer
+auth_check2
+httpd_parse_request
+72 @httpd_ntoa.str 1
+httpd_ntoa
+73 @err302form 1
+send_dirredirect
+74 @expand_symlinks.checked 1
+expand_symlinks
+75 @expand_symlinks.rest 1
+expand_symlinks
+76 @expand_symlinks.maxchecked 1
+expand_symlinks
+77 @expand_symlinks.maxrest 1
+expand_symlinks
+78 @vhost_map.tempfilename 1
+vhost_map
+79 @vhost_map.maxtempfilename 1
+vhost_map
+80 @nfiles 9
+fdwatch_get_nfiles
+fdwatch_add_fd
+fdwatch_del_fd
+fdwatch_check_fd
+fdwatch_get_next_client_data
+poll_add_fd
+poll_del_fd
+poll_check_fd
+poll_get_fd
+81 @nwatches 3
+fdwatch_get_nfiles
+fdwatch
+fdwatch_logstats
+82 @fd_rw 5
+fdwatch_get_nfiles
+fdwatch_add_fd
+fdwatch_del_fd
+fdwatch_check_fd
+poll_check_fd
+83 @fd_data 4
+fdwatch_get_nfiles
+fdwatch_add_fd
+fdwatch_del_fd
+fdwatch_get_next_client_data
+84 @nreturned 2
+fdwatch
+fdwatch_get_next_client_data
+85 @next_ridx 2
+fdwatch
+fdwatch_get_next_client_data
+86 @poll_rfdidx 3
+poll_init
+poll_watch
+poll_get_fd
+87 @poll_fdidx 4
+poll_init
+poll_add_fd
+poll_del_fd
+poll_check_fd
+88 @pollfds 5
+poll_init
+poll_add_fd
+poll_del_fd
+poll_watch
+poll_check_fd
+89 @npoll_fds 3
+poll_add_fd
+poll_del_fd
+poll_watch
+90 @free_maps 4
+mmc_map
+mmc_cleanup
+mmc_term
+really_unmap
+91 @free_count 5
+mmc_map
+mmc_cleanup
+mmc_term
+mmc_logstats
+really_unmap
+92 @alloc_count 4
+mmc_map
+mmc_cleanup
+mmc_term
+mmc_logstats
+93 @maps 4
+mmc_map
+mmc_unmap
+mmc_term
+check_hash_size
+94 @map_count 5
+mmc_map
+mmc_cleanup
+mmc_logstats
+check_hash_size
+really_unmap
+95 @mapped_bytes 4
+mmc_map
+mmc_cleanup
+mmc_logstats
+really_unmap
+96 @expire_age 2
+mmc_cleanup
+mmc_logstats
+97 @hash_size 4
+mmc_logstats
+check_hash_size
+find_hash
+add_hash
+98 @hash_mask 4
+check_hash_size
+find_hash
+add_hash
+hash
+99 @hash_table 4
+check_hash_size
+find_hash
+add_hash
+really_unmap
+100 @timers 6
+tmr_term
+l_add
+tmr_init
+tmr_mstimeout
+tmr_run
+l_remove
+101 @free_timers 4
+tmr_init
+tmr_create
+tmr_cancel
+tmr_cleanup
+102 @free_count597 5
+tmr_logstats
+tmr_init
+tmr_create
+tmr_cancel
+tmr_cleanup
+103 @active_count 4
+tmr_logstats
+tmr_init
+tmr_create
+tmr_cancel
+104 @alloc_count598 4
+tmr_logstats
+tmr_init
+tmr_create
+tmr_cleanup
+105 @tmr_timeout.timeout 1
+tmr_timeout
+106 @JunkClientData 1
+main
+107 @tm_to_time.monthtab 1
+tm_to_time
+108 @err302title 2
+cgi_interpose_output
+send_dirredirect
+109 @err401title 2
+cgi_interpose_output
+send_authenticate
+110 @err451title 1
+cgi_interpose_output
+111 @make_envp.envp 1
+make_envp
+112 @build_env.buf 1
+build_env
+113 @build_env.maxbuf 1
+build_env
+114 @ls.maxnames 1
+ls
+115 @ls.names 1
+ls
+116 @ls.nameptrs 1
+ls
+117 @ls.name 1
+ls
+118 @ls.maxname 1
+ls
+119 @ls.rname 1
+ls
+120 @ls.maxrname 1
+ls
+121 @ls.encrname 1
+ls
+122 @ls.maxencrname 1
+ls
+123 @really_check_referrer.refhost 1
+really_check_referrer
+124 @really_check_referrer.refhost_size 1
+really_check_referrer
+125 @auth_check2.authpath 1
+auth_check2
+126 @auth_check2.maxauthpath 1
+auth_check2
+127 @auth_check2.prevauthpath 1
+auth_check2
+128 @auth_check2.maxprevauthpath 1
+auth_check2
+129 @auth_check2.prevmtime 1
+auth_check2
+130 @auth_check2.prevuser 1
+auth_check2
+131 @auth_check2.maxprevuser 1
+auth_check2
+132 @auth_check2.prevcryp 1
+auth_check2
+133 @auth_check2.maxprevcryp 1
+auth_check2
+134 @b64_decode_table 1
+b64_decode
+135 @send_authenticate.header 1
+send_authenticate
+136 @send_authenticate.maxheader 1
+send_authenticate
+137 @err401form 1
+send_authenticate
+138 @send_dirredirect.location 1
+send_dirredirect
+139 @send_dirredirect.header 1
+send_dirredirect
+140 @send_dirredirect.maxlocation 1
+send_dirredirect
+141 @send_dirredirect.maxheader 1
+send_dirredirect
+142 @scan_wday.sorted 1
+scan_wday
+143 @scan_mon.sorted 1
+scan_mon
