@@ -601,7 +601,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 
 	      errs() << "callinst: " << *CI << "\n";
 	      int argNum = CI->getNumArgOperands();
-	      //  errs() << "argNum: " << argNum << "\n";
 	      
 	      map<Argument*, Value*> ParamArgMap;
 	      for(int i = 0; i < argNum; i++){
@@ -626,6 +625,9 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 		}
 	      }
 	      errs() << "ParamArgMap size: " << ParamArgMap.size() << "\n";
+	      if (!ParamArgMap.empty())
+		FindGlobalsInCalleeFunction(CI->getCalledFunction(), ParamArgMap, globalTaintedFuncMap);
+
 
 	      // for CallInst we need to handle the arglist specially, to deal with related globals
 	      
