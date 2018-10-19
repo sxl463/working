@@ -437,28 +437,26 @@ void ProgramDependencyGraph::FindGlobalsInCalleeFunction(Function* F,
       if (isa<LoadInst>(&I)){
 	LoadInst* LI = dyn_cast<LoadInst>(&I);
 	Value* ptr = LI->getPointerOperand();
-
 	if (ptr != nullptr && ParamArgMap.find(ptr) != ParamArgMap.end()){
-	  errs() << "Gloabl-arg found in " << F->getName() << "\n";
+	  errs() << "READ Gloabl-arg found in " << F->getName() << "\n";
 	  errs() << "Arg is : " << *ptr << "\n";
 	  errs() << "Real Global: " << *ParamArgMap[ptr] << "\n";
-	}
-
-	GEPOperator* gop = dyn_cast<GEPOperator>(ptr);
-
-	if(gop != nullptr && ParamArgMap.find(gop->getPointerOperand()) != ParamArgMap.end()){
-	  errs() << "FindGlobalsInCalleeFunction: GEPOperator(load): " << *gop << "\n" << "is a GEPOperator\n";
-	  errs() << "GLOBAL_in_GEPOperator READ: " << *gop->getPointerOperand() << "\n";
-	  //	  globalTaintedFuncMap[gop->getPointerOperand()].insert(F);		  
+	  globalTaintedFuncMap[ParamArgMap[ptr]].insert(F);	  
 	}
       }
 
       if(isa<StoreInst>(&I)){
 	StoreInst* SI = dyn_cast<StoreInst>(&I);
-	errs() << "isa StoreInst: " << I << "\n";
+	Value* ptr = SI->getPointerOperand();
+	if (ptr != nullptr && ParamArgMap.find(ptr) != ParamArgMap.end()){
+	  errs() << "WRITE Global-arg found in " << F->getName() << "\n";
+	  errs() << "Arg is : " << *ptr << "\n";
+	  errs() << "Real Global: " << *ParamArgMap[ptr] << "\n";
+	  globalTaintedFuncMap[ParamArgMap[ptr]].insert(F);
+	}
       }
     }
-  }
+  }// end for
 
   return;
 }
@@ -726,11 +724,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 		}		
 	      }// end searching globalList
 	    }// end processing store to global
-
-	    
-
-
-
 
 	    if(InstW->getType() == INST){	       
 	      if (ddgGraph.DDG->depends(InstW, InstW2)) {

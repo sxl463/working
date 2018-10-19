@@ -141,11 +141,10 @@ vector<CallPair> callPairsFromPin;
 vector<CallEdge> CG; // static call graph
 vector<CallEdge> GlobalCG; // static call graph, only for global variables
 
-//map<string, vector<int> > gcovDict;
-
 set<string> funcSet;
 map<string, int> funcDict;
 set<FidSize*> fidSizeSet;
+set<FidSize*> fidSizeSetForGlobals; // for globals
 
 // string: global name, int: id
 map<string, int> globalDict;
@@ -333,12 +332,16 @@ void findEdgesWithLeak (vector<CallEdge>& CG,
 }
 
 
-void printFidSizeSetToFile(set<FidSize*>& S, string filename){
+void printFidSizeSetToFile(set<FidSize*>& S, set<FidSize*>& GS, string filename){
   ofstream outfile;
   outfile.open(filename);
   for(auto const &fs : S){
     outfile << fs->fname << " " << fs->fid << " " << fs->icount << "\n";
   }
+  for(auto const &gs : GS){
+    outfile << gs->fname << " " << gs->fid << " " << gs->icount << "\n";
+  }
+  
   outfile.close();
 }
 
@@ -518,22 +521,18 @@ struct GetCallGraph : public ModulePass {
       fid++;
       errs() << "fid: " << fid << "\n"; 
 
-
-
       for(BasicBlock &B : F){
 	for(Instruction &I : B){
 	  if (auto *CI = dyn_cast<CallInst>(&I)){
 	    Function* callee = CI->getCalledFunction();
 	    //e.g. %call = call i32 (i32, ...)* bitcast (i32 (i32)* @f to i32 (i32, ...)*)(i32 5), !dbg !30
-	    if (callee == nullptr)
-	      continue;
+	    if (callee == nullptr) continue;
 	    if(CI->getCalledFunction()->isIntrinsic() || CI->getCalledFunction()->isDeclaration())
 	      continue;
 	    if (callee->isDeclaration() || callee->isIntrinsic())
 	      continue;
 		
-	    //	    errs() << "getCalledFunction: " << CI->getCalledFunction()->getName() << "\n";
-	    // CallPair cp(F.getName(), CI->getCalledFunction()->getName());
+	    // for call edges between two functions
 	    CallEdge ce(F.getName(), CI->getCalledFunction()->getName(), 0, 0.0);
 	    bool inCG = false;
 	    for (const auto& E : CG){
@@ -543,34 +542,61 @@ struct GetCallGraph : public ModulePass {
 	      }
 	    }
 	    if (!inCG){
-	      //	      errs() << "before computeEdgeComplexity...\n";
-	      // plus one, dongrui will do minus one in his algorithm later
 	      ce.type_complexity = computeEdgeComplexity(CI->getCalledFunction()) + 1;
-	      //    errs() << "after computeEdgeComplexity...\n";
 	      errs() << "\n CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << ce.type_complexity << "\n"; 
 	      errs() << "FunctionTy: " << *CI->getCalledFunction()->getFunctionType() << "\n";
 	      CG.push_back(ce);
 	    } 
 	  }
 	}
+      }// end for (BasicBlock...)
+    }//end for F : M...
+
+    // process call edges between global variables and functions 
+    int gid = fid+1;
+    
+    errs() << "Now we are processing call edges between global variables and functions:\n";
+    errs() << "globalTaintedFuncMap.size: " << PDG->globalTaintedFuncMap.size() << "\n";
+    errs() << "gid: " << gid << "\n";
+
+    for (auto & GF : PDG->globalTaintedFuncMap){
+      string Str;
+      raw_string_ostream OS(Str);
+
+      OS << *(GF.first);
+      string gv = OS.str();
+      unsigned first = gv.find("@");
+      unsigned last = gv.find("=") - 1;
+      string strnew = gv.substr(first, last-first);
+
+     FidSize *pfs = new FidSize(strnew, gid, -1);
+     fidSizeSetForGlobals.insert(pfs);
+     gid++;
+     errs() << strnew << " gid: " << gid << "\n"; 
+
+      for (auto &F : GF.second){
+	// CallEdge: src dest call_times type_complexity
+	int type_complexity = getComplexity(GF.first->getType());
+	errs() << "Global: " << strnew << "\n"; 
+	errs() << "Global type complexity: " << type_complexity << "\n";
+	CallEdge gce(strnew, F->getName().str(), 0, type_complexity);
+	CallEdge cge(F->getName().str(), strnew, 0, type_complexity);
       }
-	
-    }//end for Function
+    }
       
     func_id_file.close();
 
     errs() << "call graph size: " << CG.size() << "\n";
     errs() << "non redundant call edges: " << testS.size() << "\n";
 
-    //    readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout.txt");
+        readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout.txt");
     //    readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.calltimes");
     //    readCallTimesFromPin(callPairsFromPin, "./wget/wget.pin.output");
-    readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.output");
+    //    readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.output");
 
     set<string> invokedF;
     for (const auto& P : callPairsFromPin){
       for (auto& E : CG){
-
 	if(invokedF.find(E.caller) == invokedF.end())
 	  invokedF.insert(E.caller);
 	if(invokedF.find(E.callee) == invokedF.end())
@@ -595,10 +621,10 @@ struct GetCallGraph : public ModulePass {
 
     findEdgesWithLeak(CG, PDG->edgesWithParamLeak, PDG->edgesWithReturnLeak);
 
-    //       printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
+           printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
     //    printCallGraphToFile(CG, "./ssh/ssh.callgraph");
     //       printCallGraphToFile(CG, "./wget/wget.callgraph");
-       printCallGraphToFile(CG, "./telnet/telnet.callgraph");
+    //       printCallGraphToFile(CG, "./telnet/telnet.callgraph");
 
     errs() << "CallPairsFromPin: " << callPairsFromPin.size() << "\n";
 
@@ -612,10 +638,10 @@ struct GetCallGraph : public ModulePass {
     errs() << "real callpairs: " << temp << "\n";
 
 
-    //   printFidSizeSetToFile(fidSizeSet, "./thttpd_id_code_size.txt");
-    //       printFidSizeSetToFile(fidSizeSet, "./ssh_id_code_size.txt");
-    //       printFidSizeSetToFile(fidSizeSet, "./wget/wget_id_code_size.txt");
-       printFidSizeSetToFile(fidSizeSet, "./telnet/telnet_id_code_size.txt");
+    printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./thttpd_id_code_size.txt");
+    //       printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./ssh_id_code_size.txt");
+    //       printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./wget/wget_id_code_size.txt");
+    //   printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./telnet/telnet_id_code_size.txt");
 
 
     fidSizeSet.clear();

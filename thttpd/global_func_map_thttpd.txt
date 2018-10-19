@@ -226,16 +226,20 @@ httpd_realloc_str
 53 @str_alloc_size 2
 httpd_logstats
 httpd_realloc_str
-54 @really_start_request.indexname 1
+54 @really_start_request.indexname 2
 really_start_request
-55 @really_start_request.maxindexname 1
+httpd_realloc_str
+55 @really_start_request.maxindexname 2
 really_start_request
+httpd_realloc_str
 56 @really_start_request.index_names 1
 really_start_request
-57 @really_start_request.dirname 1
+57 @really_start_request.dirname 2
 really_start_request
-58 @really_start_request.maxdirname 1
+httpd_realloc_str
+58 @really_start_request.maxdirname 2
 really_start_request
+httpd_realloc_str
 59 @err404title 3
 really_start_request
 cgi_interpose_output
@@ -294,18 +298,24 @@ httpd_parse_request
 httpd_ntoa
 73 @err302form 1
 send_dirredirect
-74 @expand_symlinks.checked 1
+74 @expand_symlinks.checked 2
 expand_symlinks
-75 @expand_symlinks.rest 1
+httpd_realloc_str
+75 @expand_symlinks.rest 2
 expand_symlinks
-76 @expand_symlinks.maxchecked 1
+httpd_realloc_str
+76 @expand_symlinks.maxchecked 2
 expand_symlinks
-77 @expand_symlinks.maxrest 1
+httpd_realloc_str
+77 @expand_symlinks.maxrest 2
 expand_symlinks
-78 @vhost_map.tempfilename 1
+httpd_realloc_str
+78 @vhost_map.tempfilename 2
 vhost_map
-79 @vhost_map.maxtempfilename 1
+httpd_realloc_str
+79 @vhost_map.maxtempfilename 2
 vhost_map
+httpd_realloc_str
 80 @nfiles 9
 fdwatch_get_nfiles
 fdwatch_add_fd
@@ -372,11 +382,12 @@ mmc_map
 mmc_cleanup
 mmc_term
 mmc_logstats
-93 @maps 4
+93 @maps 5
 mmc_map
 mmc_unmap
 mmc_term
 check_hash_size
+really_unmap
 94 @map_count 5
 mmc_map
 mmc_cleanup
@@ -450,66 +461,90 @@ send_authenticate
 cgi_interpose_output
 111 @make_envp.envp 1
 make_envp
-112 @build_env.buf 1
+112 @build_env.buf 2
 build_env
-113 @build_env.maxbuf 1
+httpd_realloc_str
+113 @build_env.maxbuf 2
 build_env
+httpd_realloc_str
 114 @ls.maxnames 1
 ls
 115 @ls.names 1
 ls
 116 @ls.nameptrs 1
 ls
-117 @ls.name 1
+117 @ls.name 2
 ls
-118 @ls.maxname 1
+httpd_realloc_str
+118 @ls.maxname 2
 ls
-119 @ls.rname 1
+httpd_realloc_str
+119 @ls.rname 2
 ls
-120 @ls.maxrname 1
+httpd_realloc_str
+120 @ls.maxrname 2
 ls
-121 @ls.encrname 1
+httpd_realloc_str
+121 @ls.encrname 2
 ls
-122 @ls.maxencrname 1
+httpd_realloc_str
+122 @ls.maxencrname 2
 ls
-123 @really_check_referrer.refhost 1
+httpd_realloc_str
+123 @really_check_referrer.refhost 2
 really_check_referrer
-124 @really_check_referrer.refhost_size 1
+httpd_realloc_str
+124 @really_check_referrer.refhost_size 2
 really_check_referrer
-125 @auth_check2.authpath 1
+httpd_realloc_str
+125 @auth_check2.authpath 2
 auth_check2
-126 @auth_check2.maxauthpath 1
+httpd_realloc_str
+126 @auth_check2.maxauthpath 2
 auth_check2
-127 @auth_check2.prevauthpath 1
+httpd_realloc_str
+127 @auth_check2.prevauthpath 2
 auth_check2
-128 @auth_check2.maxprevauthpath 1
+httpd_realloc_str
+128 @auth_check2.maxprevauthpath 2
 auth_check2
+httpd_realloc_str
 129 @auth_check2.prevmtime 1
 auth_check2
-130 @auth_check2.prevuser 1
+130 @auth_check2.prevuser 2
 auth_check2
-131 @auth_check2.maxprevuser 1
+httpd_realloc_str
+131 @auth_check2.maxprevuser 2
 auth_check2
-132 @auth_check2.prevcryp 1
+httpd_realloc_str
+132 @auth_check2.prevcryp 2
 auth_check2
-133 @auth_check2.maxprevcryp 1
+httpd_realloc_str
+133 @auth_check2.maxprevcryp 2
 auth_check2
+httpd_realloc_str
 134 @b64_decode_table 1
 b64_decode
-135 @send_authenticate.header 1
+135 @send_authenticate.header 2
 send_authenticate
-136 @send_authenticate.maxheader 1
+httpd_realloc_str
+136 @send_authenticate.maxheader 2
 send_authenticate
+httpd_realloc_str
 137 @err401form 1
 send_authenticate
-138 @send_dirredirect.location 1
+138 @send_dirredirect.location 2
 send_dirredirect
-139 @send_dirredirect.header 1
+httpd_realloc_str
+139 @send_dirredirect.header 2
 send_dirredirect
-140 @send_dirredirect.maxlocation 1
+httpd_realloc_str
+140 @send_dirredirect.maxlocation 2
 send_dirredirect
-141 @send_dirredirect.maxheader 1
+httpd_realloc_str
+141 @send_dirredirect.maxheader 2
 send_dirredirect
+httpd_realloc_str
 142 @scan_wday.sorted 1
 scan_wday
 143 @scan_mon.sorted 1
