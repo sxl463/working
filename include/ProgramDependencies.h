@@ -81,6 +81,10 @@ namespace cot {
     int connectCallerAndCallee(InstructionWrapper *CInstW, llvm::Function *callee);
     //    int connectCallerAndCallee(CallInst *CI, llvm::Function *callee);
 
+    void FindGlobalsInCalleeFunction(Function* F, map<Value*, Value*>& ParamArgMap, 
+				     map<Value*, set<Function*> >& globalTaintedFuncMap);
+
+
     void FindGlobalsInReadAndWrite(InstructionWrapper* InstW, 
 				   map<Value*, set<Function*> >& globalTaintedFuncMap);
 
@@ -88,8 +92,7 @@ namespace cot {
 
     void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
 
-    const char *getPassName() const
-    {
+    const char *getPassName() const{
       return "Program Dependency Graph";
     }
 

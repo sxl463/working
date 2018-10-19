@@ -388,18 +388,80 @@ void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW
 	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
 	}
 	InstW->setAccess(true);
-      }
-      /*
-      // CallInst
-      if(isa<CallInst>(I)){
-	CallInst* CI = dyn_cast<StoreInst>(I);
-	}*/
-	      
+      }	      
     }
   return;
 }
 
+// define internal void @httpd_realloc_str(i8** %strP, i64* %maxsizeP, i64 %size) 
+// store i8** %strP, i8*** %strP.addr, align 8
+// call void @llvm.dbg.declare(metadata !{i8*** %strP.addr}, metadata !3455), !dbg !3456
+// store i64* %maxsizeP, i64** %maxsizeP.addr, align 8
+void processStoredArgument(Function* F, map<Value*, Value*>& ParamArgMap){
+  int count = ParamArgMap.size();
+    for (BasicBlock &B : *F){
+      for (Instruction &I : B){
+	if (isa<StoreInst>(&I)){
+	  StoreInst* SI = dyn_cast<StoreInst>(&I);
+	  if (ParamArgMap.find(SI->getValueOperand()) != ParamArgMap.end()){
+	    errs() << "Arg stored into temp Reg\n";
+	    errs() << "Arg: " << *SI->getValueOperand() << " | Reg: " << *SI->getPointerOperand() << "\n";
+	    ParamArgMap[SI->getPointerOperand()] = 
+	      ParamArgMap[SI->getValueOperand()];
+	  }
+	}
+      }
+    }
+    
+    if(ParamArgMap.size() != count){
+      errs() << "ParamArgMap size changed to: " << ParamArgMap.size() << "\n";
+      for (auto const&I : ParamArgMap){
+	errs() << " key: " << *I.first << " | " << *I.second << "\n"; 
+      }
+    }
+    return;
+}
 
+void ProgramDependencyGraph::FindGlobalsInCalleeFunction(Function* F, 
+							 map<Value*, Value*>& ParamArgMap,
+							 map<Value*, set<Function*> >& globalTaintedFuncMap){
+  if (ParamArgMap.empty()){
+    errs() << "No need to find globals because ParamArgMap is empty!\n";
+    exit(1);
+  }
+
+  processStoredArgument(F, ParamArgMap);
+
+  for (BasicBlock &B : *F){
+    for (Instruction &I : B){
+      if (isa<LoadInst>(&I)){
+	LoadInst* LI = dyn_cast<LoadInst>(&I);
+	Value* ptr = LI->getPointerOperand();
+
+	if (ptr != nullptr && ParamArgMap.find(ptr) != ParamArgMap.end()){
+	  errs() << "Gloabl-arg found in " << F->getName() << "\n";
+	  errs() << "Arg is : " << *ptr << "\n";
+	  errs() << "Real Global: " << *ParamArgMap[ptr] << "\n";
+	}
+
+	GEPOperator* gop = dyn_cast<GEPOperator>(ptr);
+
+	if(gop != nullptr && ParamArgMap.find(gop->getPointerOperand()) != ParamArgMap.end()){
+	  errs() << "FindGlobalsInCalleeFunction: GEPOperator(load): " << *gop << "\n" << "is a GEPOperator\n";
+	  errs() << "GLOBAL_in_GEPOperator READ: " << *gop->getPointerOperand() << "\n";
+	  //	  globalTaintedFuncMap[gop->getPointerOperand()].insert(F);		  
+	}
+      }
+
+      if(isa<StoreInst>(&I)){
+	StoreInst* SI = dyn_cast<StoreInst>(&I);
+	errs() << "isa StoreInst: " << I << "\n";
+      }
+    }
+  }
+
+  return;
+}
 
 
 
@@ -543,8 +605,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      // e.g.   %1 = load i32 (i32)** %p, align 8
 	      //	%call = call i32 %1(i32 2))
 	      if(callee == nullptr){
-		//		errs() << "call_func = null: " << *CI << "\n";
-		
 		Type* t = CI->getCalledValue()->getType();
 		errs() << "indirect call, called Type t = " << *t << "\n";
 
@@ -602,7 +662,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      errs() << "callinst: " << *CI << "\n";
 	      int argNum = CI->getNumArgOperands();
 	      
-	      map<Argument*, Value*> ParamArgMap;
+	      map<Value*, Value*> ParamArgMap;
 	      for(int i = 0; i < argNum; i++){
 		Value* argi = CI->getArgOperand(i);
 		errs() << *argi << "\n";
@@ -614,8 +674,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 		  // go to callee function body
 		  int j = 0;
 		  for(Function::arg_iterator ai = CI->getCalledFunction()->arg_begin(); ai != CI->getCalledFunction()->arg_end(); ++ai){
-		    //  errs() << "ai: " << *ai << "\n";
-
 		    if(j == i){
 		      errs() << "*argi:" << *argi << " | *ai: " << *ai << "\n";
 		      ParamArgMap[ai] = argi;
