@@ -193,9 +193,9 @@ bool FlowDependenceAnalysis::runOnFunction(Function &F) {
   if (!PredCache)
     PredCache.reset(new PredIteratorCache());
 
-  errs() << "FlowDependenceAnalysis::runOnFunction Local Deps: " << LocalDeps.size() << "\n";
+  //  errs() << "FlowDependenceAnalysis::runOnFunction Local Deps: " << LocalDeps.size() << "\n";
 
-  errs() << "Local Deps: " << LocalDeps.size() << "\n";
+  //  errs() << "Local Deps: " << LocalDeps.size() << "\n";
   return false;
 }
 

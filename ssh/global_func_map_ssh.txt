@@ -1,0 +1,665 @@
+0 @debug_flag 2
+main
+control_persist_detach
+1 @tty_flag 7
+main
+ssh_session2
+ssh_session
+control_persist_detach
+ssh_session2_open
+ssh_session2_setup
+mux_client_request_session
+2 @stdin_null_flag 7
+main
+ssh_session2
+control_persist_detach
+ssh_session2_open
+client_check_initial_eof_on_stdin
+mux_client_request_session
+mux_client_request_stdio_fwd
+3 @need_controlpersist_detach 2
+ssh_session2
+fork_postauth
+4 @saved_av 1
+main
+5 @original_effective_uid 2
+main
+ssh_create_socket
+6 @fork_after_authentication_flag 6
+main
+ssh_session2
+ssh_session
+fork_postauth
+ssh_confirm_remote_forward
+client_loop
+7 @config 2
+main
+process_config_files
+8 @subsystem_flag 3
+main
+ssh_session2_setup
+mux_client_request_session
+9 @__progname 5
+main
+resolve_canonicalize
+resolve_host
+do_log
+log_init
+10 @BSDoptarg 1
+main
+11 @original_real_uid 8
+main
+load_public_identity_files
+tilde_expand_paths
+add_local_forward
+execute_in_shell
+ssh_proxy_fdpass_connect
+ssh_proxy_connect
+ssh_create_socket
+12 @host 12
+main
+process_config_files
+load_public_identity_files
+client_loop
+client_process_net_input
+client_input_hostkeys
+server_alive_check
+mux_client_request_session
+process_mux_stop_listening
+process_mux_open_fwd
+process_mux_terminate
+process_mux_new_session
+13 @stderr 14
+sshkey_dump_ec_point
+sshkey_dump_ec_key
+main
+usage
+client_loop
+client_wait_until_can_do_something
+client_process_output
+client_suspend_self
+input_userauth_banner
+muxclient
+mux_client_request_session
+log_init
+log_redirect_stderr_to
+sanitise_stdfd
+14 @no_shell_flag 5
+main
+ssh_session2
+ssh_session2_open
+client_loop
+client_stop_mux
+15 @BSDoptind 1
+main
+16 @BSDoptreset 1
+main
+17 @environ 2
+ssh_session2_setup
+mux_client_request_session
+18 @stdin 12
+main
+ssh_session
+ssh_session2_setup
+client_loop
+client_check_initial_eof_on_stdin
+client_check_window_change
+client_wait_until_can_do_something
+client_process_input
+leave_non_blocking
+enter_non_blocking
+leave_raw_mode
+enter_raw_mode
+19 @shen_start 2
+client_loop
+ssh_connect_direct
+20 @shen_end 1
+client_loop
+21 @cpu_time_used 1
+client_loop
+22 @ostdin_null_flag 2
+ssh_session2
+control_persist_detach
+23 @ono_shell_flag 1
+ssh_session2
+24 @otty_flag 2
+ssh_session2
+control_persist_detach
+25 @orequest_tty 2
+ssh_session2
+control_persist_detach
+26 @remote_forward_confirms_received 1
+ssh_confirm_remote_forward
+27 @default_ssh_port.port 1
+default_ssh_port
+28 @session_ident 3
+client_loop
+client_status_confirm
+client_input_channel_req
+29 @x11_refuse_time 2
+client_x11_get_proto
+client_request_x11
+30 @escape_pending1 2
+client_loop
+client_check_initial_eof_on_stdin
+31 @last_was_cr 2
+client_loop
+process_escapes
+32 @exit_status 3
+client_loop
+client_input_exit_status
+client_input_channel_req
+33 @stdin_eof 6
+client_loop
+process_escapes
+client_check_initial_eof_on_stdin
+client_make_packets_from_stdin_data
+client_wait_until_can_do_something
+client_process_input
+34 @buffer_high 2
+client_loop
+client_wait_until_can_do_something
+35 @connection_in 3
+client_loop
+client_wait_until_can_do_something
+client_process_net_input
+36 @connection_out 2
+client_loop
+client_wait_until_can_do_something
+37 @stdout 8
+client_loop
+client_wait_until_can_do_something
+client_process_output
+client_suspend_self
+ssh_keysign
+mux_client_forward
+ssh_askpass
+mprintf
+38 @quit_pending 9
+client_loop
+process_escapes
+signal_handler
+client_wait_until_can_do_something
+client_process_net_input
+client_process_output
+client_input_exit_status
+update_known_hosts
+process_mux_terminate
+39 @escape_char1 4
+client_loop
+process_escapes
+client_check_initial_eof_on_stdin
+client_process_input
+40 @session_closed 4
+client_loop
+client_stop_mux
+client_channel_closed
+client_wait_until_can_do_something
+41 @need_rekeying 2
+client_loop
+process_escapes
+42 @control_persist_exit_time 3
+client_loop
+client_wait_until_can_do_something
+set_control_persist_exit_time
+43 @received_signal 2
+client_loop
+signal_handler
+44 @in_non_blocking_mode 2
+leave_non_blocking
+enter_non_blocking
+45 @client_input_hostkeys.hostkeys_seen 1
+client_input_hostkeys
+46 @_in_raw_mode 3
+get_saved_tio
+leave_raw_mode
+enter_raw_mode
+47 @client_version_string 2
+send_client_banner
+ssh_kex2
+48 @server_version_string 2
+ssh_exchange_identification
+ssh_kex2
+49 @previous_host_key 1
+verify_host_key
+50 @proxy_command_pid 2
+ssh_kill_proxy_command
+ssh_proxy_connect
+51 @matching_host_key_dns 2
+verify_host_key
+check_host_key
+52 @supported 1
+authmethod_get
+53 @preferred 1
+authmethod_get
+54 @current 1
+authmethod_get
+55 @muxserver_sock 8
+main
+ssh_session2
+control_persist_detach
+client_stop_mux
+cleanup_exit
+set_control_persist_exit_time
+muxserver_listen
+process_mux_stop_listening
+56 @muxclient_request_id 7
+mux_client_request_alive
+mux_client_request_terminate
+mux_client_request_session
+mux_client_request_stdio_fwd
+mux_client_request_stop_listening
+mux_client_proxy
+mux_client_forward
+57 @muxclient_command 3
+main
+muxclient
+mux_client_forward
+58 @mux_listener_channel 2
+muxserver_listen
+process_mux_stop_listening
+59 @muxclient_terminate 5
+mux_client_request_session
+mux_client_request_stdio_fwd
+mux_client_read
+mux_client_write_packet
+control_client_sighandler
+60 @muxserver_pid 3
+mux_client_request_session
+mux_client_request_stdio_fwd
+control_client_sigrelay
+61 @received_window_change_signal 3
+window_change_handler
+client_check_window_change
+client_suspend_self
+62 @IPv4or6 5
+channel_set_af
+x11_create_display_inet
+x11_connect_display
+connect_to
+channel_setup_fwd_listener_tcpip
+63 @all_opens_permitted 4
+channel_connect_to_port
+channel_permit_all_opens
+channel_add_permitted_opens
+channel_connect_to_path
+64 @permitted_adm_opens 6
+channel_connect_to_port
+channel_add_adm_permitted_opens
+channel_disable_adm_local_opens
+channel_clear_adm_permitted_opens
+channel_print_adm_permitted_opens
+channel_connect_to_path
+65 @num_adm_permitted_opens 6
+channel_connect_to_port
+channel_add_adm_permitted_opens
+channel_disable_adm_local_opens
+channel_clear_adm_permitted_opens
+channel_print_adm_permitted_opens
+channel_connect_to_path
+66 @x11_saved_display 1
+x11_request_forwarding_with_spoofing
+67 @x11_saved_proto 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+68 @x11_saved_data 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+69 @x11_saved_data_len 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+70 @x11_fake_data 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+71 @x11_fake_data_len 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+72 @channel_handler.did_init 1
+channel_handler
+73 @session_id2 3
+ssh_kex2
+userauth_hostbased
+sign_and_send_pubkey
+74 @session_id2_len 3
+ssh_kex2
+userauth_hostbased
+sign_and_send_pubkey
+75 @xxx_host 2
+ssh_kex2
+verify_host_key_callback
+76 @xxx_hostaddr 2
+ssh_kex2
+verify_host_key_callback
+77 @userauth_passwd.attempt 1
+userauth_passwd
+78 @userauth_kbdint.attempt 1
+userauth_kbdint
+79 @ssh_packet_disconnect.disconnecting 1
+ssh_packet_disconnect
+80 @active_state 82
+channel_free
+channel_not_very_much_buffered_data
+channel_send_open
+channel_request_start
+channel_set_fds
+channel_output_poll
+channel_proxy_downstream
+channel_proxy_upstream
+channel_input_data
+channel_input_extended_data
+channel_input_ieof
+channel_input_close
+channel_input_oclose
+channel_input_close_confirmation
+channel_input_open_confirmation
+channel_input_open_failure
+channel_input_window_adjust
+channel_input_port_open
+channel_input_status_confirm
+channel_request_remote_forwarding
+channel_send_window_changes
+x11_input_open
+deny_input_open
+x11_request_forwarding_with_spoofing
+auth_request_forwarding
+main
+ssh_session2
+ssh_session
+ssh_session2_setup
+ssh_exchange_identification
+ssh_login
+ssh_put_password
+ssh_kex2
+userauth_hostbased
+userauth_kbdint
+userauth_passwd
+userauth_none
+ssh_userauth2
+input_userauth_ext_info
+input_userauth_service_accept
+input_userauth_failure
+input_userauth_banner
+userauth
+input_userauth_pk_ok
+input_userauth_passwd_changereq
+input_userauth_info_req
+ssh_keysign
+send_pubkey_test
+sign_and_send_pubkey
+identity_sign_encode
+mux_session_confirm
+channel_post_auth_listener
+channel_post_x11_listener
+channel_pre_open
+channel_pre_input_draining
+channel_pre_x11_open_13
+channel_pre_open_13
+port_open_helper
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+channel_post_connecting
+channel_check_window
+channel_handle_wfd
+chan_send_eof2
+chan_send_ieof1
+chan_send_oclose1
+chan_send_close2
+chan_send_eow2
+packet_set_connection
+packet_get_char
+packet_get_int
+packet_read_seqnr
+packet_read_poll_seqnr
+packet_close
+packet_process_incoming
+packet_write_wait
+packet_write_poll
+packet_read_expect
+packet_disconnect
+packet_send_debug
+tty_make_modes
+dispatch_protocol_error
+81 @saved_euid 2
+temporarily_use_uid
+restore_uid
+82 @saved_egid 2
+temporarily_use_uid
+restore_uid
+83 @privileged 2
+temporarily_use_uid
+restore_uid
+84 @temporarily_use_uid_effective 3
+temporarily_use_uid
+restore_uid
+permanently_set_uid
+85 @saved_egroupslen 2
+temporarily_use_uid
+restore_uid
+86 @saved_egroups 2
+temporarily_use_uid
+restore_uid
+87 @user_groupslen 1
+temporarily_use_uid
+88 @user_groups 1
+temporarily_use_uid
+89 @monotime.gettime_failed 1
+monotime
+90 @monotime_double.gettime_failed 1
+monotime_double
+91 @pkcs11_interactive 2
+pkcs11_init
+pkcs11_rsa_private_encrypt
+92 @channels_alloc 19
+channel_by_id
+channel_by_remote_id
+channel_new
+channel_free
+channel_open_message
+channel_free_all
+channel_close_all
+channel_stop_listening
+channel_not_very_much_buffered_data
+channel_still_open
+channel_find_open
+channel_output_poll
+channel_send_window_changes
+channel_find_maxfd
+channel_handler
+channel_cancel_rport_listener_streamlocal
+channel_cancel_rport_listener_tcpip
+channel_cancel_lport_listener_streamlocal
+channel_cancel_lport_listener_tcpip
+93 @channels 19
+channel_by_id
+channel_by_remote_id
+channel_new
+channel_free
+channel_open_message
+channel_free_all
+channel_close_all
+channel_stop_listening
+channel_not_very_much_buffered_data
+channel_still_open
+channel_find_open
+channel_output_poll
+channel_send_window_changes
+channel_find_maxfd
+channel_handler
+channel_cancel_rport_listener_streamlocal
+channel_cancel_rport_listener_tcpip
+channel_cancel_lport_listener_streamlocal
+channel_cancel_lport_listener_tcpip
+94 @channel_max_fd 4
+channel_close_fd
+channel_prepare_select
+channel_register_fds
+channel_post_connecting
+95 @num_permitted_opens 13
+channel_free
+channel_proxy_downstream
+channel_connect_to_port
+channel_request_remote_forwarding
+channel_permit_all_opens
+channel_add_permitted_opens
+channel_update_permitted_opens
+channel_clear_permitted_opens
+channel_connect_by_listen_address
+channel_connect_by_listen_path
+channel_connect_to_path
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+96 @permitted_opens 12
+channel_free
+channel_proxy_downstream
+channel_connect_to_port
+channel_request_remote_forwarding
+channel_add_permitted_opens
+channel_update_permitted_opens
+channel_clear_permitted_opens
+channel_connect_by_listen_address
+channel_connect_by_listen_path
+channel_connect_to_path
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+97 @x11_refuse_time1454 2
+channel_set_x11_refuse_time
+x11_open_helper
+98 @compat13 9
+channel_still_open
+channel_find_open
+channel_output_poll
+channel_input_data
+client_init_dispatch
+channel_handle_rfd
+channel_handler_init
+channel_handle_wfd
+enable_compat13
+99 @compat20 55
+channel_still_open
+channel_output_poll
+channel_input_data
+channel_input_open_confirmation
+channel_input_open_failure
+channel_input_window_adjust
+channel_request_remote_forwarding
+x11_request_forwarding_with_spoofing
+main
+ssh_init_stdio_forwarding
+client_loop
+client_request_tun_fwd
+process_escapes
+client_init_dispatch
+client_check_window_change
+client_wait_until_can_do_something
+process_cmdline
+verify_host_key
+ssh_login
+send_client_banner
+channel_post_auth_listener
+channel_post_x11_listener
+channel_pre_x11_open
+channel_pre_open
+port_open_helper
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+channel_handler_init
+channel_post_connecting
+channel_post_open
+channel_handle_wfd
+channel_post_mux_client
+enable_compat20
+chan_ibuf_empty
+chan_obuf_empty
+chan_rcvd_ieof
+chan_rcvd_oclose
+chan_write_failed
+chan_is_dead
+chan_shutdown_read
+chan_shutdown_write
+ssh_packet_is_rekeying
+ssh_packet_start_compression
+ssh_packet_read_seqnr
+ssh_packet_read_poll_seqnr
+sshpkt_disconnect
+ssh_packet_send_debug
+sshpkt_start
+sshpkt_send
+ssh_packet_send_ignore
+ssh_packet_get_state
+ssh_packet_set_state
+tty_make_modes
+tty_parse_modes
+dispatch_protocol_error
+100 @datafellows 28
+channel_input_extended_data
+channel_input_open_failure
+channel_update_permitted_opens
+ssh_session2
+process_escapes
+client_input_channel_open
+client_request_x11
+ssh_exchange_identification
+ssh_put_password
+userauth_hostbased
+input_userauth_pk_ok
+try_identity
+send_pubkey_test
+sign_and_send_pubkey
+channel_post_x11_listener
+channel_rfwd_bind_host
+channel_setup_fwd_listener_tcpip
+channel_fwd_bind_addr
+channel_post_connecting
+compat_datafellows
+compat_cipher_proposal
+compat_pkalg_proposal
+compat_kex_proposal
+chan_is_dead
+chan_send_eow2
+key_sign
+key_verify
+kexgex_client
+101 @argv0 3
+do_log
+log_init
+log_change_level
+102 @log_level 2
+do_log
+log_init
+103 @log_handler 3
+do_log
+log_init
+set_log_handler
+104 @log_handler_ctx 3
+do_log
+log_init
+set_log_handler
+105 @log_on_stderr 4
+do_log
+log_init
+log_change_level
+log_is_on_stderr
+106 @log_facility 3
+do_log
+log_init
+log_change_level
+107 @log_stderr_fd 3
+do_log
+log_is_on_stderr
+log_redirect_stderr_to
+108 @dh_new_group1.gen 1
+dh_new_group1
+109 @dh_new_group1.group1 1
+dh_new_group1
+110 @dh_new_group14.gen 1
+dh_new_group14
+111 @dh_new_group14.group14 1
+dh_new_group14
+112 @dh_new_group16.gen 1
+dh_new_group16
+113 @dh_new_group16.group16 1
+dh_new_group16
+114 @dh_new_group18.gen 1
+dh_new_group18
+115 @dh_new_group18.group16 1
+dh_new_group18

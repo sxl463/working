@@ -205,6 +205,8 @@ namespace llvm {
 	  return "";
 	case DATA_GENERAL:
 	  return "style=dotted";
+	case RET:
+	  return "style=dotted";
 	case GLOBAL_VALUE:
 	  return "style=dotted";
 	case PARAMETER:

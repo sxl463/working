@@ -37,12 +37,17 @@ namespace cot {
   /*!
    * Program Dependencies Graph
    */
+  /*
+  typedef struct{
+    string caller;
+    string callee;
+  }ParamLeakEdge;
 
   typedef struct{
     string caller;
     string callee;
-  }ForwardCallEdge;
-
+  }ReturnLeakEdge;
+  */
   class ProgramDependencyGraph : public llvm::ModulePass
   {
   public:
@@ -52,7 +57,9 @@ namespace cot {
 
     set<FunctionWrapper*> senFuncs;
     set<FunctionWrapper*> insFuncs;
-    set<ForwardCallEdge> edgesWithForwardLeak;
+    vector<pair<string, string> > edgesWithParamLeak;
+    vector<pair<string, string> > edgesWithReturnLeak;
+    map<Value*, set<Function*> > globalTaintedFuncMap;
 
     ProgramDependencyGraph() : llvm::ModulePass(ID){
       PDG = new ProgramDepGraph();
@@ -74,12 +81,18 @@ namespace cot {
     int connectCallerAndCallee(InstructionWrapper *CInstW, llvm::Function *callee);
     //    int connectCallerAndCallee(CallInst *CI, llvm::Function *callee);
 
+    void FindGlobalsInCalleeFunction(Function* F, map<Value*, Value*>& ParamArgMap, 
+				     map<Value*, set<Function*> >& globalTaintedFuncMap);
+
+
+    void FindGlobalsInReadAndWrite(InstructionWrapper* InstW, 
+				   map<Value*, set<Function*> >& globalTaintedFuncMap);
+
     bool runOnModule(llvm::Module &M);
 
     void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
 
-    const char *getPassName() const
-    {
+    const char *getPassName() const{
       return "Program Dependency Graph";
     }
 

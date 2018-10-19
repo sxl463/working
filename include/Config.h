@@ -10,5 +10,14 @@
 
 #define IMPLICIT_ON 0
 
+// thttpd
+//#define SECRET_FILE_SIZE 21
+
+// ssh id_rsa private file size bytes
+// #define SECRET_FILE_SIZE 1675
+
+// wget integrity story
+#define SECRET_FILE_SIZE 0
+
 
 #endif

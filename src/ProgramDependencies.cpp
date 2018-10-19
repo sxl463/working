@@ -66,21 +66,6 @@ typedef struct S{
   struct S* next;
 }tnameS;
 
-/*
-  typedef struct {
-  string val;
-  unsigned lineNum;
-  }PrivateValue;
-
-  class rule:greater<PrivateValue>
-  {
-  public:
-  bool operator () (PrivateValue p1,PrivateValue p2) const{
-  return p1.lineNum < p2.lineNum;
-  }
-  };*/
-
-
 //unsigned getLine() const in DebugLoc.h
 std::map<llvm::Value*, std::set<string> > privateMap;
 //map each alloca into a status(bool), if true means this alloca now is sensitive,otherwise not
@@ -96,9 +81,16 @@ AliasAnalysis* ProgramDependencyGraph::Global_AA = nullptr;
 std::map<const llvm::Function *,FunctionWrapper *> FunctionWrapper::funcMap;
 std::map<const llvm::CallInst *,CallWrapper * > CallWrapper::callMap;
 
+
+
+
+
 std::set<llvm::Value*> allPtrSet;
 std::vector<llvm::Value*> sensitive_values;
 std::vector<InstructionWrapper*> sensitive_nodes;
+
+std::vector<pair<string, string> > edgesWithParamLeak;
+std::vector<pair<string, string> > edgesWithReturnLeak;
 
 
 void ProgramDependencyGraph::connectAllPossibleFunctions(InstructionWrapper* CInstW, FunctionType* funcTy){
@@ -109,18 +101,13 @@ void ProgramDependencyGraph::connectAllPossibleFunctions(InstructionWrapper* CIn
   for(; FI != FE; ++FI){
     if((*FI).first->getFunctionType() == funcTy && (*FI).first->getName() != "main"){
       errs() << (*FI).first->getName() << " function pointer! \n";
-
       //TODO:
       //color a ret node in callee(func ptr)randomly as long as we can combine them together with caller
-
     }
   }
 }
 
-
-
-void ProgramDependencyGraph::drawFormalParameterTree(Function* func, TreeType treeTy)
-{
+void ProgramDependencyGraph::drawFormalParameterTree(Function* func, TreeType treeTy){
   for(list<ArgumentWrapper*>::iterator argI = FunctionWrapper::funcMap[func]->getArgWList().begin(),
 	argE = FunctionWrapper::funcMap[func]->getArgWList().end(); argI != argE; ++argI){
     for(tree<InstructionWrapper*>::iterator TI = (*argI)->getTree(treeTy).begin(), 
@@ -137,8 +124,7 @@ void ProgramDependencyGraph::drawFormalParameterTree(Function* func, TreeType tr
   }//end for list
 }
 
-void ProgramDependencyGraph::drawActualParameterTree(CallInst* CI, TreeType treeTy)
-{      
+void ProgramDependencyGraph::drawActualParameterTree(CallInst* CI, TreeType treeTy){      
   for(list<ArgumentWrapper*>::iterator argI = CallWrapper::callMap[CI]->getArgWList().begin(),
 	argE = CallWrapper::callMap[CI]->getArgWList().end(); argI != argE; ++argI){
 
@@ -157,9 +143,6 @@ void ProgramDependencyGraph::drawActualParameterTree(CallInst* CI, TreeType tree
 }
 
 void ProgramDependencyGraph::connectFunctionAndFormalTrees(llvm::Function *callee){
-
-  //  errs() << "DEBUG 152: In connectFunctionAndFormalTrees, callee->getName() : " << callee->getName() << "\n";
-
   for(list<ArgumentWrapper*>::iterator argI = FunctionWrapper::funcMap[callee]->getArgWList().begin(),
 	argE = FunctionWrapper::funcMap[callee]->getArgWList().end(); argI != argE; ++argI){
 
@@ -195,7 +178,6 @@ void ProgramDependencyGraph::connectFunctionAndFormalTrees(llvm::Function *calle
 
 	for(;SI != SE; ++SI){
 	  if((*formal_in_TI)->getFieldType() == (*SI)->getValueOperand()->getType()){
-
 	    for(std::set<InstructionWrapper*>::iterator nodeIt = InstructionWrapper::nodes.begin();
 		nodeIt != InstructionWrapper::nodes.end(); ++nodeIt){
 	
@@ -221,12 +203,10 @@ void ProgramDependencyGraph::connectFunctionAndFormalTrees(llvm::Function *calle
 	for(;LI != LE; ++LI){
 	  if((*formal_out_TI)->getFieldType() == (*LI)->getPointerOperand()->getType()->getContainedType(0)){
 	    for(std::set<InstructionWrapper*>::iterator nodeIt = InstructionWrapper::nodes.begin();
-		nodeIt != InstructionWrapper::nodes.end(); ++nodeIt){
+		nodeIt != InstructionWrapper::nodes.end(); ++nodeIt)
 	
-	      if((*nodeIt)->getInstruction() == dyn_cast<Instruction>(*LI)){		
+	      if((*nodeIt)->getInstruction() == dyn_cast<Instruction>(*LI))		
 		PDG->addDependency(*InstructionWrapper::nodes.find(*nodeIt), *InstructionWrapper::nodes.find(*formal_out_TI), DATA_GENERAL);
-	      }
-	    }
 	  }
 	}//end for(; LI != LE; ++LI)
       }//end if(nullptr != (*formal_out_TI)->...)
@@ -235,38 +215,57 @@ void ProgramDependencyGraph::connectFunctionAndFormalTrees(llvm::Function *calle
 }
 
 
-
-
 int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, llvm::Function *callee){
 
-  if(InstW == nullptr || callee == nullptr){
+  if(InstW == nullptr || callee == nullptr)
     return 1;
-  }
   
-#if PARAMETER_TREE
+  //#if PARAMETER_TREE
   //callInst in caller --> Entry Node in callee
   PDG->addDependency(InstW, FunctionWrapper::funcMap[callee]->getEntry(), CONTROL);
-#else
-  PDG->addDependency(InstW, FunctionWrapper::funcMap[callee]->getEntry(), DATA_GENERAL);
-#endif
-
-
-  //ReturnInst in callee --> CallInst in caller
-  for(list<Instruction*>::iterator RI = FunctionWrapper::funcMap[callee]->getReturnInstList().begin(), 
-	RE = FunctionWrapper::funcMap[callee]->getReturnInstList().end(); RI != RE; ++RI){
+  //#else
+  //  PDG->addDependency(InstW, FunctionWrapper::funcMap[callee]->getEntry(), DATA_GENERAL);
+  //#endif
   
-    for(std::set<InstructionWrapper*>::iterator nodeIt = InstructionWrapper::nodes.begin();
-	nodeIt != InstructionWrapper::nodes.end(); ++nodeIt){
+  //ReturnInst in callee --> CallInst in caller
+  Instruction* RI = nullptr;
+  for(auto &B : *callee){
+    for(auto &I : B)
+      if(isa<ReturnInst>(I))
+	RI = &I; 
+  }
+
+  if (callee->getName() == "auth_check"){
+    errs() << "when callee is auth_check, RI: " << *RI;
+    errs() << "CI is: " << *InstW->getInstruction() << " caller: " << InstW->getFunction()->getName() << "\n";
+  }
+
+  // If this ReturnInst not in nodes yet, insert first
+  /*
+    if(InstructionWrapper::instMap.find(RI) == InstructionWrapper::instMap.end()){
+    InstructionWrapper *iw = new InstructionWrapper(RI, InstW->getFunction(), INST);
+    InstructionWrapper::nodes.insert(iw);
+    InstructionWrapper::instMap[RI] = iw;
+    InstructionWrapper::funcInstWList[InstW->getFunction()].insert(iw);
+    }
+  */
+  for(std::set<InstructionWrapper*>::iterator nodeIt = InstructionWrapper::nodes.begin();
+      nodeIt != InstructionWrapper::nodes.end(); ++nodeIt){
 	
-      if((*nodeIt)->getInstruction() == *RI){
-	if (nullptr != dyn_cast<ReturnInst>((*nodeIt)->getInstruction())->getReturnValue())
-	  PDG->addDependency(*InstructionWrapper::nodes.find(*nodeIt), InstW, DATA_GENERAL);
-	//TODO: indirect call, function name??
-	else 
-	  ;// errs() << "void ReturnInst: " << *(*nodeIt)->getInstruction() << " Function: " << callee_func->getName();
+    if((*nodeIt)->getInstruction() == RI){
+      if (nullptr != dyn_cast<ReturnInst>((*nodeIt)->getInstruction())->getReturnValue()){
+	PDG->addDependency(*InstructionWrapper::nodes.find(*nodeIt), InstW, RET);
+	if (callee->getName() == "auth_check")
+	  errs() << "auth_check ReturnInst : " << *RI << "InstW is in " << InstW->getFunction()->getName() << "\n";
+	if (callee->getName() == "auth_check2")
+	  errs() << "auth_check2 ReturnInst size: " << *RI << "\n";
       }
+      //TODO: indirect call, function name??
+      else 
+	;// errs() << "void ReturnInst: " << *(*nodeIt)->getInstruction() << " Function: " << callee_func->getName();
     }
   }
+  
 #if PARAMETER_TREE
 
   //TODO: consider all kinds of connecting cases
@@ -303,7 +302,6 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
 	  actual_out_TI = (*actual_argI)->getTree(ACTUAL_OUT_TREE).begin();  //TI4
 	actual_in_TI != actual_in_TE; ++actual_in_TI, ++formal_in_TI, ++formal_out_TI, ++actual_out_TI){
 
-
       //connect trees: antual-in --> formal-in, formal-out --> actual-out
       PDG->addDependency(*InstructionWrapper::nodes.find(*actual_in_TI), *InstructionWrapper::nodes.find(*formal_in_TI), PARAMETER);
       PDG->addDependency(*InstructionWrapper::nodes.find(*formal_out_TI), *InstructionWrapper::nodes.find(*actual_out_TI), PARAMETER);
@@ -312,7 +310,6 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
 
     //TODO: why removing this debugging infor will cause segmentation fault?
  
-
     //3. ACTUAL_OUT --> LoadInsts in #Caller# function
     for(tree<InstructionWrapper*>::iterator actual_out_TI = (*actual_argI)->getTree(ACTUAL_OUT_TREE).begin(),
 	  actual_out_TE = (*actual_argI)->getTree(ACTUAL_OUT_TREE).end(); actual_out_TI != actual_out_TE; ++actual_out_TI){
@@ -346,9 +343,132 @@ int ProgramDependencyGraph::connectCallerAndCallee(InstructionWrapper *InstW, ll
   //end if PARAMETER_TREE
 #endif
 
-
   return 0;
 }
+
+
+void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW,
+						       map<Value*, set<Function*> >& globalTaintedFuncMap){
+  Instruction *I = InstW->getInstruction();
+  if(I == nullptr){
+    errs() << "Wrong input in FindGlobalsInReadAndWrite\n";
+    exit(1);
+  }
+
+  // process GetElementPtr 1. GetElementPtr 2. Load 3. Store
+  if(InstW->getType() == INST && !InstW->getAccess())
+    {
+      if(isa<GetElementPtrInst>(I)){
+	GetElementPtrInst* GPI = dyn_cast<GetElementPtrInst>(I); 
+	if(isa<GlobalVariable>(GPI->getPointerOperand())){
+	  errs() << "GLOBAL_in_GetElementptrInst: " << *I<< "\n";
+	  errs() << "ptr: " << *GPI->getPointerOperand() << "\n" << "is a GlobalVariable\n";
+	  globalTaintedFuncMap[GPI->getPointerOperand()].insert(InstW->getFunction());
+	}
+	InstW->setAccess(true);
+      }
+      if(isa<LoadInst>(I)){
+	LoadInst* LI = dyn_cast<LoadInst>(I);
+	Value* ptr = LI->getPointerOperand();
+	GEPOperator* gop = dyn_cast<GEPOperator>(ptr);
+	if(gop != nullptr && isa<GlobalVariable>(gop->getPointerOperand())){
+	  errs() << "GEPOperator(load): " << *gop << "\n" << "is a GEPOperator\n";
+	  errs() << "GLOBAL_in_GEPOperator: " << *gop->getPointerOperand() << "\n";
+	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
+	}
+	InstW->setAccess(true);
+      }
+      if(isa<StoreInst>(I)){
+	StoreInst* SI = dyn_cast<StoreInst>(I);
+	Value* ptr = SI->getPointerOperand();
+	GEPOperator* gop = dyn_cast<GEPOperator>(ptr);
+	if(gop != nullptr && isa<GlobalVariable>(gop->getPointerOperand())){
+	  errs() << "GEPOperator(store): " << *gop << "\n" << "is a GEPOperator\n";
+	  errs() << "GLOBAL_in_GEPOperator: " << *gop->getPointerOperand() << "\n";
+	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
+	}
+	InstW->setAccess(true);
+      }	      
+    }
+  return;
+}
+
+// define internal void @httpd_realloc_str(i8** %strP, i64* %maxsizeP, i64 %size) 
+// store i8** %strP, i8*** %strP.addr, align 8
+// call void @llvm.dbg.declare(metadata !{i8*** %strP.addr}, metadata !3455), !dbg !3456
+// store i64* %maxsizeP, i64** %maxsizeP.addr, align 8
+void processStoredArgument(Function* F, map<Value*, Value*>& ParamArgMap){
+  int count = ParamArgMap.size();
+    for (BasicBlock &B : *F){
+      for (Instruction &I : B){
+	if (isa<StoreInst>(&I)){
+	  StoreInst* SI = dyn_cast<StoreInst>(&I);
+	  if (ParamArgMap.find(SI->getValueOperand()) != ParamArgMap.end()){
+	    errs() << "Arg stored into temp Reg\n";
+	    errs() << "Arg: " << *SI->getValueOperand() << " | Reg: " << *SI->getPointerOperand() << "\n";
+	    ParamArgMap[SI->getPointerOperand()] = 
+	      ParamArgMap[SI->getValueOperand()];
+	  }
+	}
+      }
+    }
+    
+    if(ParamArgMap.size() != count){
+      errs() << "ParamArgMap size changed to: " << ParamArgMap.size() << "\n";
+      for (auto const&I : ParamArgMap){
+	errs() << " key: " << *I.first << " | " << *I.second << "\n"; 
+      }
+    }
+    return;
+}
+
+void ProgramDependencyGraph::FindGlobalsInCalleeFunction(Function* F, 
+							 map<Value*, Value*>& ParamArgMap,
+							 map<Value*, set<Function*> >& globalTaintedFuncMap){
+  if (ParamArgMap.empty()){
+    errs() << "No need to find globals because ParamArgMap is empty!\n";
+    exit(1);
+  }
+
+  processStoredArgument(F, ParamArgMap);
+
+  for (BasicBlock &B : *F){
+    for (Instruction &I : B){
+      if (isa<LoadInst>(&I)){
+	LoadInst* LI = dyn_cast<LoadInst>(&I);
+	Value* ptr = LI->getPointerOperand();
+
+	if (ptr != nullptr && ParamArgMap.find(ptr) != ParamArgMap.end()){
+	  errs() << "Gloabl-arg found in " << F->getName() << "\n";
+	  errs() << "Arg is : " << *ptr << "\n";
+	  errs() << "Real Global: " << *ParamArgMap[ptr] << "\n";
+	}
+
+	GEPOperator* gop = dyn_cast<GEPOperator>(ptr);
+
+	if(gop != nullptr && ParamArgMap.find(gop->getPointerOperand()) != ParamArgMap.end()){
+	  errs() << "FindGlobalsInCalleeFunction: GEPOperator(load): " << *gop << "\n" << "is a GEPOperator\n";
+	  errs() << "GLOBAL_in_GEPOperator READ: " << *gop->getPointerOperand() << "\n";
+	  //	  globalTaintedFuncMap[gop->getPointerOperand()].insert(F);		  
+	}
+      }
+
+      if(isa<StoreInst>(&I)){
+	StoreInst* SI = dyn_cast<StoreInst>(&I);
+	errs() << "isa StoreInst: " << I << "\n";
+      }
+    }
+  }
+
+  return;
+}
+
+
+
+
+
+
+
 
 
 bool ProgramDependencyGraph::runOnModule(Module &M)
@@ -362,32 +482,40 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 
   errs() << "funcMap size = " << FunctionWrapper::funcMap.size() << '\n';
 
-  //Get the Module's list of global variable and function identifiers
-  
+  //Get the Module's list of global variable and function identifiers  
   errs()<<"======Global List: ======\n";
 
-  
-
-  //    M.getGlobalList().dump();
   for(llvm::Module::global_iterator globalIt = M.global_begin(); globalIt != M.global_end(); ++globalIt){
-    //globalIt = M.getGlobalList().begin();      globalIt != M.getGlobalList().end(); ++globalIt){
-    //    errs()<< "gloabal value: " << *globalIt << " alignment: " << (*globalIt).getAlignment() << "\n";
-
     InstructionWrapper *globalW = new InstructionWrapper(nullptr, nullptr, &(*globalIt), GLOBAL_VALUE);
     InstructionWrapper::nodes.insert(globalW);
     InstructionWrapper::globalList.insert(globalW);
     
-    //find all global pointer values and insert them into a list
-    if(globalW->getValue()->getType()->getContainedType(0)->isPointerTy()){
-       // errs() << " Pointer global value found! : " << *(globalW->getValue()) << "\n"; 
-      gp_list.push_back(globalW);
+    // immutable global, e.g. @str = "printf..."
+    if ((*globalIt).isConstant()){
+      errs() << "constant global: " << *globalW->getValue() << "\n";
     }
+    
+    if (!(*globalIt).isConstant()){
+      errs() << "mutable global: " << *globalW->getValue() << "\n";
+      InstructionWrapper::nonConstantGlobalList.insert(globalW);
+    }
+
+
+    //find all global pointer values and insert them into a list
+    if(globalW->getValue()->getType()->getContainedType(0)->isPointerTy())
+      gp_list.push_back(globalW);
   }
-  
 
   int funcs = 0;
   int colored_funcs = 0;
   int uncolored_funcs = 0;
+
+  for(Module::iterator F = M.begin(), E = M.end(); F != E; ++F){
+    if((*F).isDeclaration())
+      continue;
+      
+    InstructionWrapper::constructInstMap(*F);
+  }
 
   //process a module function by function
   for(Module::iterator F = M.begin(), E = M.end(); F != E; ++F)
@@ -406,7 +534,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 
       errs() << "PDG " << 1.0*funcs/M.getFunctionList().size()*100 << "% completed\n";
 
-      InstructionWrapper::constructInstMap(*F);
+      //      InstructionWrapper::constructInstMap(*F);
 
       //find all Load/Store instructions for each F, insert to F's storeInstList and loadInstList
       for(inst_iterator I = inst_begin(F), IE = inst_end(F); I != IE; ++I){
@@ -424,8 +552,9 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	  FunctionWrapper::funcMap[&*F]->getLoadInstList().push_back(LI);
 	  FunctionWrapper::funcMap[&*F]->getPtrSet().insert(LI->getPointerOperand());
 	}
-	if(isa<ReturnInst>(pInstruction))
-	  FunctionWrapper::funcMap[&*F]->getReturnInstList().push_back(pInstruction);	
+	if(isa<ReturnInst>(pInstruction)){
+	  FunctionWrapper::funcMap[&*F]->getReturnInstList().push_back(pInstruction);
+	}	
 	if(isa<CallInst>(pInstruction))
 	  FunctionWrapper::funcMap[&*F]->getCallInstList().push_back(dyn_cast<CallInst>(pInstruction));		  	      
 	if(isa<AllocaInst>(pInstruction)){
@@ -476,13 +605,11 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      // e.g.   %1 = load i32 (i32)** %p, align 8
 	      //	%call = call i32 %1(i32 2))
 	      if(callee == nullptr){
-		errs() << "call_func = null: " << *CI << "\n";
-		
 		Type* t = CI->getCalledValue()->getType();
 		errs() << "indirect call, called Type t = " << *t << "\n";
 
 		FunctionType* funcTy = cast<FunctionType>(cast<PointerType>(t)->getElementType());
-		errs() << "afte cast<FunctionType>, ft = " << *funcTy <<"\n";
+		errs() << "after cast<FunctionType>, ft = " << *funcTy <<"\n";
 		connectAllPossibleFunctions(InstW, funcTy);
 		continue;
 	      }
@@ -518,29 +645,92 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      CallWrapper *callW = new CallWrapper(CI);
 	      CallWrapper::callMap[CI] = callW;
 
+	      if(callee->getName() == "auth_check"){
+		errs() << *CI << "\n";
+	      }
+	      if(callee->getName() == "auth_check2"){
+		errs() << *CI << "\n";
+	      }
+	     
 	      //take recursive callInst as common callInst
 	      if(0 == connectCallerAndCallee(InstW, callee)){
 		InstW->setAccess(true);
 	      }
+
+	      // common callee function, see if there is global variable in the CallInst's arg list
+
+	      errs() << "callinst: " << *CI << "\n";
+	      int argNum = CI->getNumArgOperands();
+	      
+	      map<Value*, Value*> ParamArgMap;
+	      for(int i = 0; i < argNum; i++){
+		Value* argi = CI->getArgOperand(i);
+		errs() << *argi << "\n";
+		if (isa<GlobalVariable>(argi)){
+		  errs() << "The "<< i << "th arg is global\n";
+		  errs() << "function uses this global: " << InstW->getFunction()->getName() << "\n";
+		  globalTaintedFuncMap[argi].insert(InstW->getFunction());	
+		  
+		  // go to callee function body
+		  int j = 0;
+		  for(Function::arg_iterator ai = CI->getCalledFunction()->arg_begin(); ai != CI->getCalledFunction()->arg_end(); ++ai){
+		    if(j == i){
+		      errs() << "*argi:" << *argi << " | *ai: " << *ai << "\n";
+		      ParamArgMap[ai] = argi;
+		    }
+		    j++;
+		  }
+		}
+	      }
+	      errs() << "ParamArgMap size: " << ParamArgMap.size() << "\n";
+	      if (!ParamArgMap.empty())
+		FindGlobalsInCalleeFunction(CI->getCalledFunction(), ParamArgMap, globalTaintedFuncMap);
+
+
+	      // for CallInst we need to handle the arglist specially, to deal with related globals
+	      
+
+
 	    }//end callnode
+	  if(pInstruction != nullptr)
+	    FindGlobalsInReadAndWrite(InstW, globalTaintedFuncMap);
 
 	  //second iteration on nodes to add both control and data Dependency
 	  for(std::set<InstructionWrapper*>::iterator nodeIt2 = InstructionWrapper::funcInstWList[&*F].begin();
 	      nodeIt2 != InstructionWrapper::funcInstWList[&*F].end(); ++nodeIt2){
 	    InstructionWrapper *InstW2 = *nodeIt2;
   
-	    //process all globals see whether dependency exists
+	    //process all non constant globals see whether dependency exists
 	    if(InstW2->getType() == INST && isa<LoadInst>(InstW2->getInstruction())){
 
 	      LoadInst* LI2 = dyn_cast<LoadInst>(InstW2->getInstruction());
 	      
-	      for(std::set<InstructionWrapper *>::const_iterator gi = InstructionWrapper::globalList.begin(); 
-		  gi != InstructionWrapper::globalList.end(); ++gi){	   
+	      for(std::set<InstructionWrapper *>::const_iterator gi = InstructionWrapper::nonConstantGlobalList.begin(); 
+		  gi != InstructionWrapper::nonConstantGlobalList.end(); ++gi){	   
 		if(LI2->getPointerOperand() == (*gi)->getValue()){
 		  PDG->addDependency(*gi, InstW2, GLOBAL_VALUE);
+		  globalTaintedFuncMap[(*gi)->getValue()].insert(InstW2->getFunction());
 		}		
 	      }// end searching globalList
-	    }//end procesing load for global
+	    }//end processing load for global
+
+
+	    if (InstW2->getType() == INST && isa<StoreInst>(InstW2->getInstruction())){
+	      StoreInst* SI2 = dyn_cast<StoreInst>(InstW2->getInstruction());
+	      for(std::set<InstructionWrapper *>::const_iterator gi = InstructionWrapper::nonConstantGlobalList.begin(); 
+		  gi != InstructionWrapper::nonConstantGlobalList.end(); ++gi){	   
+		if(SI2->getPointerOperand() == (*gi)->getValue()){
+		  // TODO: maybe some circles?
+		  PDG->addDependency(*gi, InstW2, GLOBAL_VALUE);
+		  globalTaintedFuncMap[(*gi)->getValue()].insert(InstW2->getFunction());
+		}		
+	      }// end searching globalList
+	    }// end processing store to global
+
+	    
+
+
+
 
 	    if(InstW->getType() == INST){	       
 	      if (ddgGraph.DDG->depends(InstW, InstW2)) {
@@ -613,6 +803,17 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
     }// end for (int i ...
   }//end if (global_annos)
 
+
+  for (auto &gf : globalTaintedFuncMap){
+    errs() << "gf: " << *(gf.first) << " tainted funcs: " << (gf.second).size() << "\n";
+    for (auto &F : gf.second){
+      errs() << " " << F->getName() << "\n";
+    }
+  }
+
+
+
+
   errs() << "DEBUG shen \n";
 
   //process all sensitive instructions in functions and all global values, color their corresponding nodes in set "nodes"   
@@ -635,9 +836,9 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
     }//end global value
   }
   /*
-  for(auto const &I : sensitive_nodes){
+    for(auto const &I : sensitive_nodes){
     errs() << "SENSITIVE NODE: " <<*I->getInstruction()<< "\n" ;    
-  }
+    }
   */
   std::deque<const InstructionWrapper*> queue;
   for(int i = 0; i < sensitive_nodes.size(); i++){
@@ -663,32 +864,40 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       coloredInstSet.insert(InstW);
     }
     
+    // errs() << "CurrNode: " << *InstW->getInstruction() << "\n";
     DependencyNode<InstructionWrapper>* DNode = PDG->getNodeByData(InstW);
     for(int i = 0; i < DNode->getDependencyList().size(); i++){      
       if(nullptr != DNode->getDependencyList()[i].first->getData()){
 	InstructionWrapper *adjacent_InstW = 
 	  *InstructionWrapper::nodes.find(const_cast<InstructionWrapper*>(DNode->getDependencyList()[i].first->getData())); 
-
-	//	if(InstW->getInstruction()!= nullptr && adjacent_InstW->getInstruction() != nullptr)
-	//  errs() << "Curr: " << *InstW->getInstruction() << " --- " << *adjacent_InstW->getInstruction()<<"\n";
+	/*
+	  if(InstW->getInstruction()!= nullptr && adjacent_InstW->getInstruction() != nullptr)
+	  errs() << "Curr: " << *InstW->getInstruction() << " --- " << *adjacent_InstW->getInstruction()<<"\n";
+	
+	  if(isa<ReturnInst>(InstW->getInstruction()) && adjacent_InstW->getType() == ENTRY)
+	  errs() << "Curr: " << *InstW->getInstruction() << " --> " << "ENTRY: " << adjacent_InstW->getFunction()->getName() << "\n";
+	*/
 
 	if(true != adjacent_InstW->getFlag()){
+
+	  // CALL -> ENTRY
+	  if (InstW->getType() == CALL && adjacent_InstW->getType() == ENTRY){
+	    errs() << "Parameter Leak : " << InstW->getFunction()->getName() << " --> " << adjacent_InstW->getFunction()->getName() << "\n\n"; 
+	    edgesWithParamLeak.push_back(make_pair(InstW->getFunction()->getName(), adjacent_InstW->getFunction()->getName()));
+	  }
 
 	  if (visitedF.find(adjacent_InstW->getFunction()) == visitedF.end()){
 	    errs() << "New Func colored: " << adjacent_InstW->getFunction()->getName() << " ";
 	    visitedF.insert(adjacent_InstW->getFunction());
 	    //   if(adjacent_InstW->getInstruction() != nullptr)
 	    //  errs() << "\nvisitedF: " << visitedF.size() << "\nInst: " << *adjacent_InstW->getInstruction() << "\n";
-	    errs() << "forward leak edge: " << InstW->getFunction()->getName() << " ---> " 
-		   << adjacent_InstW->getFunction()->getName() << "\n";
-
+	    if (InstW->getFunction()->getName() != adjacent_InstW->getFunction()->getName()){
+	      if (DNode->getDependencyList()[i].second == RET){
+		errs() << "Return Leak : " << InstW->getFunction()->getName() << " ---> " << adjacent_InstW->getFunction()->getName() << "\n";
+		edgesWithReturnLeak.push_back(make_pair(adjacent_InstW->getFunction()->getName(), InstW->getFunction()->getName()));
+	      }
+	    }
 	  }
-
-
-	  /*	  
-	  if(InstW->getInstruction()!= nullptr && adjacent_InstW->getInstruction() != nullptr)
-	    errs() << "Curr: " << *InstW->getInstruction() << " --- " << *adjacent_InstW->getInstruction()<<"\n";
-	  */
 	  //branchInst only generates control dependencies later, so no need to remove branch
 	  queue.push_back(DNode->getDependencyList()[i].first->getData());
 	  adjacent_InstW->setFlag(true); //label the adjacent node visited
@@ -722,13 +931,13 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	errs() << (*FI).first->getName() << " hasFuncOrFilePtr()\n";
       }
       if((*FI).second->isVisited()){
-	errs() << (*FI).first->getName() << " is colored(sensitive)\n";
+	//	errs() << (*FI).first->getName() << " is colored(sensitive)\n";
 	Function* func = (*FI).second->getFunction();
-	errs() << "func name = " << func->getName() << "\n";
+	//	errs() << "func name = " << func->getName() << "\n";
 	sen_FuncSet.insert((*FI).second );
       }
       else{
-	errs() << (*FI).first->getName() << "is uncolored\n";
+	//	errs() << (*FI).first->getName() << "is uncolored\n";
 	ins_FuncSet.insert((*FI).second );
       }
     }
@@ -743,11 +952,51 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   senFuncs = sen_FuncSet;
   insFuncs = ins_FuncSet;
 
-  errs() << "=========================== Sensitive Functions List ============================= \n";
-  for(auto const &F : senFuncs){
+  /*
+    errs() << "=========================== Sensitive Functions List ============================= \n";
+    for(auto const &F : senFuncs){
     errs() << F->getFunction()->getName() << "\n";
+    }*/
+
+
+
+  for (auto &gf : globalTaintedFuncMap){
+    errs() << "gf: " << *(gf.first) << " tainted funcs: " << (gf.second).size() << "\n";
+    for (auto &F : gf.second){
+      errs() << " " << F->getName() << "\n";
+    }
   }
 
+
+
+  ofstream outfile;
+  outfile.open("./thttpd/global_func_map_thttpd.txt");
+  //  outfile.open("./ssh/global_func_map_ssh.txt");
+  //  outfile.open("./wget/global_func_map_wget.txt");
+  //  outfile.open("./telnet/global_func_map_telnet.txt");
+  if (!outfile.is_open()){
+    errs() << "Fail to open global_func_map.txt, file can't be opened!\n ";
+    exit(0);
+  }
+  
+
+  int gvID = 0;
+  for(auto &gf : globalTaintedFuncMap){
+    //    GlobalValue *gv = dyn_cast<GlobalValue>(gf.first);
+    std::string Str;
+    raw_string_ostream OS(Str);
+
+    OS << *(gf.first);
+    string gv = OS.str();
+    unsigned first = gv.find("@");
+    unsigned last = gv.find("=") - 1;
+    string strnew = gv.substr(first, last-first);
+
+    outfile << gvID++ << " " << strnew << " " << (gf.second).size() << "\n";
+    for (auto &F : gf.second)
+      outfile << F->getName().str() << "\n";
+  }
+  outfile.close();
 
 
 
