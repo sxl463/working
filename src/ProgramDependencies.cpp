@@ -488,20 +488,26 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
     InstructionWrapper::nodes.insert(globalW);
     InstructionWrapper::globalList.insert(globalW);
     
-    // immutable global, e.g. @str = "printf..."
-    if ((*globalIt).isConstant()){
-      errs() << "constant global: " << *globalW->getValue() << "\n";
-    }
-    
-    if (!(*globalIt).isConstant()){
-      errs() << "mutable global: " << *globalW->getValue() << "\n";
-      InstructionWrapper::nonConstantGlobalList.insert(globalW);
-    }
-
-
     //find all global pointer values and insert them into a list
     if(globalW->getValue()->getType()->getContainedType(0)->isPointerTy())
       gp_list.push_back(globalW);
+
+    // immutable global, e.g. @str = "printf..."
+    if ((*globalIt).isConstant()){
+      errs() << "constant global: " << *globalW->getValue() << "\n";
+      continue;
+    }
+    else{
+      if (((*globalIt).hasInitializer())){
+	ConstantExpr *CE = dyn_cast<ConstantExpr>((*globalIt).getInitializer());
+	if (CE != nullptr && CE->isGEPWithNoNotionalOverIndexing()){
+	  errs() << "GEP Initializer: " << *CE << "\n";
+	  continue;
+	}
+      }
+      errs() << "mutable global: " << *globalW->getValue() << "\n";
+      InstructionWrapper::nonConstantGlobalList.insert(globalW);
+    }
   }
 
   int funcs = 0;
@@ -984,6 +990,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
     unsigned first = gv.find("@");
     unsigned last = gv.find("=") - 1;
     string strnew = gv.substr(first, last-first);
+    strnew[0] = '$';
 
     outfile << gvID++ << " " << strnew << " " << (gf.second).size() << "\n";
     for (auto &F : gf.second)

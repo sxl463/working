@@ -350,9 +350,25 @@ void printCallGraphToFile(vector<CallEdge>& CG, string filename){
   ofstream outfile;
   outfile.open(filename);
   for(auto const &E : CG){
-    outfile <<funcDict[E.caller] << " " << funcDict[E.callee] << " " 
-	    << E.call_times << " " << E.type_complexity << " "
-            << E.param_leak << "/" << E.return_leak << "\n";
+
+    // global -> func
+    if(E.caller[0] == '$'){
+      outfile <<globalDict[E.caller] << " " << funcDict[E.callee] << " " 
+	      << E.call_times << " " << E.type_complexity << " "
+	      << E.param_leak << "/" << E.return_leak << "\n";
+    }
+    // func -> global
+    else if (E.callee[0] == '$'){
+      outfile <<funcDict[E.caller] << " " << globalDict[E.callee] << " " 
+	      << E.call_times << " " << E.type_complexity << " "
+	      << E.param_leak << "/" << E.return_leak << "\n";
+    }
+    // func -> func
+    else{
+      outfile <<funcDict[E.caller] << " " << funcDict[E.callee] << " " 
+	      << E.call_times << " " << E.type_complexity << " "
+	      << E.param_leak << "/" << E.return_leak << "\n";
+    }
   }
   outfile.close();
 }
@@ -568,9 +584,26 @@ struct GetCallGraph : public ModulePass {
       unsigned first = gv.find("@");
       unsigned last = gv.find("=") - 1;
       string strnew = gv.substr(first, last-first);
+      strnew[0] = '$';
+
+      // For @auth_check2.prevcryp, we only get auth_check2 for checking...
+      first = strnew.find("$"); 
+      last = strnew.find(".") - 1;
+      // we can find an LLVM global like @auth_check2.prevcryp
+      if (last != string::npos){
+	string mayFunc = strnew.substr(first+1, last-first);
+	// we skip this LLVM IR global because this is a static local variable
+	if (funcSet.find(mayFunc) != funcSet.end()){
+	  errs() << "Possible Function Name: " << mayFunc << "\n";
+	  continue;
+	}
+      }
+      
 
      FidSize *pfs = new FidSize(strnew, gid, -1);
      fidSizeSetForGlobals.insert(pfs);
+
+     globalDict[strnew] = gid;
      gid++;
      errs() << strnew << " gid: " << gid << "\n"; 
 
@@ -581,8 +614,34 @@ struct GetCallGraph : public ModulePass {
 	errs() << "Global type complexity: " << type_complexity << "\n";
 	CallEdge gce(strnew, F->getName().str(), 0, type_complexity);
 	CallEdge cge(F->getName().str(), strnew, 0, type_complexity);
+
+	bool gceInCG = false;
+	for (const auto& E : CG){
+	  if (E.caller == gce.caller && E.callee == gce.callee){
+	    gceInCG = true;
+	    break;
+	  }
+	}
+	if (!gceInCG){
+	  errs() << "\n gce CALL EDGE <" <<gce.caller << " --> " << gce.callee<< "  complexity: " << gce.type_complexity << "\n"; 
+	  errs() << "globale type: " << *GF.first->getType() << "\n";
+	  CG.push_back(gce);
+	} 
+
+	bool cgeInCG = false;
+	for (const auto& E : CG){
+	  if (E.caller == cge.caller && E.callee == cge.callee){
+	    cgeInCG = true;
+	    break;
+	  }
+	}
+	if (!cgeInCG){
+	  errs() << "\n cge CALL EDGE <" <<cge.caller << " --> " << cge.callee<< "  complexity: " << cge.type_complexity << "\n"; 
+	  errs() << "globale type: " << *GF.first->getType() << "\n";
+	  CG.push_back(cge);
+	} 
       }
-    }
+    }// end auto & GF : PDG->globalTaintedFuncMap
       
     func_id_file.close();
 
@@ -609,10 +668,10 @@ struct GetCallGraph : public ModulePass {
       }
     }
 
-    //        string sourceFunc = "auth_check2";
+            string sourceFunc = "auth_check2";
     //	string sourceFunc = "sshkey_parse_private2";
     //    string sourceFunc = "fd_read_body";
-    string sourceFunc = "process_rings";
+    //string sourceFunc = "process_rings";
 
     errs() << "invoked funcs: " << invokedF.size() << "\b";
     errs() << "sensitive func: " << funcDict[sourceFunc] << "\n";
