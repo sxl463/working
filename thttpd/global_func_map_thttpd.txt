@@ -1,472 +1,856 @@
-0 $terminate 1
+0 $debug_flag 2
 main
-1 $logfile 4
+control_persist_detach
+1 $tty_flag 7
 main
-parse_args
-re_open_logfile
-read_config
-2 $no_log 3
+ssh_session2
+ssh_session
+control_persist_detach
+ssh_session2_open
+ssh_session2_setup
+mux_client_request_session
+2 $stdin_null_flag 7
 main
-parse_args
-re_open_logfile
-3 $stdout 1
+ssh_session2
+control_persist_detach
+ssh_session2_open
+client_check_initial_eof_on_stdin
+mux_client_request_session
+mux_client_request_stdio_fwd
+3 $need_controlpersist_detach 2
+ssh_session2
+fork_postauth
+4 $saved_av 1
 main
-4 $max_connects 5
+5 $original_effective_uid 2
 main
-idle
-update_throttles
-shut_down
-handle_newconnect
-5 $do_chroot 3
+ssh_create_socket
+6 $fork_after_authentication_flag 6
 main
-parse_args
-read_config
-6 $dir 3
+ssh_session2
+ssh_session
+fork_postauth
+ssh_confirm_remote_forward
+client_loop
+7 $config 2
 main
-parse_args
-read_config
-7 $debug 3
+process_config_files
+8 $subsystem_flag 3
 main
-parse_args
-read_config
-8 $stdin 1
+ssh_session2_setup
+mux_client_request_session
+9 $__progname 5
 main
-9 $pidfile 3
+resolve_canonicalize
+resolve_host
+do_log
+log_init
+10 $BSDoptarg 1
 main
-parse_args
-read_config
-10 $argv0 8
+11 $original_real_uid 8
 main
-lookup_hostname
-read_throttlefile
-no_value_required
-e_strdup
+load_public_identity_files
+tilde_expand_paths
+add_local_forward
+execute_in_shell
+ssh_proxy_fdpass_connect
+ssh_proxy_connect
+ssh_create_socket
+12 $options 86
+main
+process_config_files
+resolve_canonicalize
+resolve_host
+check_follow_cname
+load_public_identity_files
+ssh_session2
+ssh_session
+control_persist_detach
+ssh_session2_setup
+check_agent_present
+fill_default_options
+ssh_init_forwarding
+ssh_confirm_remote_forward
+ssh_init_stdio_forwarding
+resolve_addr
+add_local_forward
+add_remote_forward
+add_identity_file
+process_config_line
+read_config_file
+initialize_options
+fill_default_options_for_canonicalization
+parse_jump
+dump_client_config
+client_loop
+client_request_tun_fwd
+client_session2_setup
+client_stop_mux
+cleanup_exit
+expand_proxy_command
+client_status_confirm
+process_escapes
+client_channel_closed
+client_wait_until_can_do_something
+client_init_dispatch_13
+client_input_hostkeys
+update_known_hosts
+client_request_agent
+client_request_x11
+server_alive_check
+set_control_persist_exit_time
+process_cmdline
+client_suspend_self
+ssh_connect
+ssh_exchange_identification
+get_hostfile_hostname_ipaddr
+verify_host_key
+ssh_login
+ssh_local_cmd
+maybe_add_key_to_agent
+ssh_proxy_fdpass_connect
+ssh_proxy_connect
+warn_changed_key
+check_host_key
+confirm
+show_other_keys
+ssh_create_socket
+ssh_kex2
+userauth_hostbased
+userauth_kbdint
+userauth_passwd
+ssh_userauth2
+input_userauth_banner
+input_userauth_pk_ok
+input_userauth_passwd_changereq
+order_hostkeyalgs
+load_identity_file
+sign_and_send_pubkey
+pubkey_prepare
+authmethod_get
+muxserver_listen
+muxclient
+mux_client_forwards
+mux_client_request_session
+mux_client_request_stdio_fwd
+env_permitted
+format_forward
+process_mux_stop_listening
+process_mux_stdio_fwd
+process_mux_close_fwd
+process_mux_open_fwd
+mux_confirm_remote_forward
+process_mux_terminate
+process_mux_new_session
+mux_session_confirm
+13 $host 14
+main
+process_config_files
+resolve_canonicalize
+check_follow_cname
+load_public_identity_files
+client_loop
+client_process_net_input
+client_input_hostkeys
+server_alive_check
+mux_client_request_session
+process_mux_stop_listening
+process_mux_open_fwd
+process_mux_terminate
+process_mux_new_session
+14 $command 9
+buffer_append
+main
+ssh_session
+ssh_session2_setup
+client_session2_setup
+mux_client_request_session
+sshbuf_len
+sshbuf_init
+sshbuf_mutable_ptr
+15 $stderr 14
+sshkey_dump_ec_point
+sshkey_dump_ec_key
+main
 usage
-read_config
-value_required
-11 $stats_time 2
+client_loop
+client_wait_until_can_do_something
+client_process_output
+client_suspend_self
+input_userauth_banner
+muxclient
+mux_client_request_session
+log_init
+log_redirect_stderr_to
+sanitise_stdfd
+16 $no_shell_flag 5
 main
-logstats
-12 $start_time 2
+ssh_session2
+ssh_session2_open
+client_loop
+client_stop_mux
+17 $hostaddr 2
 main
-logstats
-13 $stats_connections 3
+ssh_connect
+18 $sensitive_data 2
 main
-handle_newconnect
-thttpd_logstats
-14 $stats_bytes 3
+ssh_login
+19 $BSDoptind 1
 main
-thttpd_logstats
-really_clear_connection
-15 $stats_simultaneous 3
+20 $BSDoptreset 1
 main
-handle_newconnect
-thttpd_logstats
-16 $connects 6
+21 $environ 2
+ssh_session2_setup
+mux_client_request_session
+22 $stdin 12
 main
-idle
-update_throttles
-shut_down
-handle_newconnect
-really_clear_connection
-17 $first_free_connect 3
+ssh_session
+ssh_session2_setup
+client_loop
+client_check_initial_eof_on_stdin
+client_check_window_change
+client_wait_until_can_do_something
+client_process_input
+leave_non_blocking
+enter_non_blocking
+leave_raw_mode
+enter_raw_mode
+23 $shen_start 2
+client_loop
+ssh_connect_direct
+24 $shen_end 1
+client_loop
+25 $cpu_time_used 1
+client_loop
+26 $ostdin_null_flag 2
+ssh_session2
+control_persist_detach
+27 $ono_shell_flag 1
+ssh_session2
+28 $otty_flag 2
+ssh_session2
+control_persist_detach
+29 $orequest_tty 2
+ssh_session2
+control_persist_detach
+30 $remote_forward_confirms_received 1
+ssh_confirm_remote_forward
+31 $default_ssh_port.port 1
+default_ssh_port
+32 $session_ident 3
+client_loop
+client_status_confirm
+client_input_channel_req
+33 $client_x11_get_proto.proto 1
+client_x11_get_proto
+34 $client_x11_get_proto.data 1
+client_x11_get_proto
+35 $x11_refuse_time 2
+client_x11_get_proto
+client_request_x11
+36 $global_confirms 2
+client_register_global_confirm
+client_global_request_reply
+37 $escape_pending1 2
+client_loop
+client_check_initial_eof_on_stdin
+38 $last_was_cr 2
+client_loop
+process_escapes
+39 $exit_status 3
+client_loop
+client_input_exit_status
+client_input_channel_req
+40 $stdin_eof 6
+client_loop
+process_escapes
+client_check_initial_eof_on_stdin
+client_make_packets_from_stdin_data
+client_wait_until_can_do_something
+client_process_input
+41 $buffer_high 2
+client_loop
+client_wait_until_can_do_something
+42 $connection_in 3
+client_loop
+client_wait_until_can_do_something
+client_process_net_input
+43 $connection_out 2
+client_loop
+client_wait_until_can_do_something
+44 $stdout 8
+client_loop
+client_wait_until_can_do_something
+client_process_output
+client_suspend_self
+ssh_keysign
+mux_client_forward
+ssh_askpass
+mprintf
+45 $quit_pending 9
+client_loop
+process_escapes
+signal_handler
+client_wait_until_can_do_something
+client_process_net_input
+client_process_output
+client_input_exit_status
+update_known_hosts
+process_mux_terminate
+46 $escape_char1 4
+client_loop
+process_escapes
+client_check_initial_eof_on_stdin
+client_process_input
+47 $stdin_buffer 11
+buffer_append
+buffer_consume
+client_loop
+process_escapes
+client_check_initial_eof_on_stdin
+client_make_packets_from_stdin_data
+client_process_input
+sshbuf_len
+sshbuf_free
+sshbuf_init
+sshbuf_mutable_ptr
+48 $stdout_buffer 12
+buffer_append
+buffer_consume
+client_loop
+process_escapes
+client_wait_until_can_do_something
+client_process_input
+client_process_output
+client_input_stdout_data
+sshbuf_len
+sshbuf_free
+sshbuf_init
+sshbuf_mutable_ptr
+49 $stderr_buffer 13
+buffer_append
+buffer_consume
+client_loop
+process_escapes
+client_wait_until_can_do_something
+client_process_net_input
+client_process_input
+client_process_output
+client_input_stderr_data
+sshbuf_len
+sshbuf_free
+sshbuf_init
+sshbuf_mutable_ptr
+50 $session_closed 4
+client_loop
+client_stop_mux
+client_channel_closed
+client_wait_until_can_do_something
+51 $need_rekeying 2
+client_loop
+process_escapes
+52 $control_persist_exit_time 3
+client_loop
+client_wait_until_can_do_something
+set_control_persist_exit_time
+53 $received_signal 2
+client_loop
+signal_handler
+54 $in_non_blocking_mode 2
+leave_non_blocking
+enter_non_blocking
+55 $client_input_hostkeys.hostkeys_seen 1
+client_input_hostkeys
+56 $_in_raw_mode 3
+get_saved_tio
+leave_raw_mode
+enter_raw_mode
+57 $client_version_string 3
+send_client_banner
+ssh_kex2
+xasprintf
+58 $server_version_string 2
+ssh_exchange_identification
+ssh_kex2
+59 $previous_host_key 1
+verify_host_key
+60 $proxy_command_pid 2
+ssh_kill_proxy_command
+ssh_proxy_connect
+61 $matching_host_key_dns 2
+verify_host_key
+check_host_key
+62 $supported 1
+authmethod_get
+63 $preferred 1
+authmethod_get
+64 $current 1
+authmethod_get
+65 $muxserver_sock 8
 main
-handle_newconnect
-really_clear_connection
-18 $num_connects 4
+ssh_session2
+control_persist_detach
+client_stop_mux
+cleanup_exit
+set_control_persist_exit_time
+muxserver_listen
+process_mux_stop_listening
+66 $muxclient_request_id 7
+mux_client_request_alive
+mux_client_request_terminate
+mux_client_request_session
+mux_client_request_stdio_fwd
+mux_client_request_stop_listening
+mux_client_proxy
+mux_client_forward
+67 $muxclient_command 3
 main
-handle_usr1
-handle_newconnect
-really_clear_connection
-19 $httpd_conn_count 4
+muxclient
+mux_client_forward
+68 $mux_listener_channel 2
+muxserver_listen
+process_mux_stop_listening
+69 $muxclient_terminate 5
+mux_client_request_session
+mux_client_request_stdio_fwd
+mux_client_read
+mux_client_write_packet
+control_client_sighandler
+70 $muxserver_pid 3
+mux_client_request_session
+mux_client_request_stdio_fwd
+control_client_sigrelay
+71 $mux_master_handlers 1
+mux_master_read_cb
+72 $received_window_change_signal 3
+window_change_handler
+client_check_window_change
+client_suspend_self
+73 $channel_pre 4
+channel_handler_init_13
+channel_handler_init
+channel_handler_init_15
+channel_handler_init_20
+74 $channel_post 4
+channel_handler_init_13
+channel_handler_init
+channel_handler_init_15
+channel_handler_init_20
+75 $IPv4or6 5
+channel_set_af
+x11_create_display_inet
+x11_connect_display
+connect_to
+channel_setup_fwd_listener_tcpip
+76 $all_opens_permitted 4
+channel_connect_to_port
+channel_permit_all_opens
+channel_add_permitted_opens
+channel_connect_to_path
+77 $permitted_adm_opens 6
+channel_connect_to_port
+channel_add_adm_permitted_opens
+channel_disable_adm_local_opens
+channel_clear_adm_permitted_opens
+channel_print_adm_permitted_opens
+channel_connect_to_path
+78 $num_adm_permitted_opens 6
+channel_connect_to_port
+channel_add_adm_permitted_opens
+channel_disable_adm_local_opens
+channel_clear_adm_permitted_opens
+channel_print_adm_permitted_opens
+channel_connect_to_path
+79 $x11_saved_display 1
+x11_request_forwarding_with_spoofing
+80 $x11_saved_proto 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+81 $x11_saved_data 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+82 $x11_saved_data_len 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+83 $x11_fake_data 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+84 $x11_fake_data_len 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+85 $channel_handler.did_init 1
+channel_handler
+86 $session_id2 3
+ssh_kex2
+userauth_hostbased
+sign_and_send_pubkey
+87 $session_id2_len 3
+ssh_kex2
+userauth_hostbased
+sign_and_send_pubkey
+88 $xxx_host 2
+ssh_kex2
+verify_host_key_callback
+89 $xxx_hostaddr 2
+ssh_kex2
+verify_host_key_callback
+90 $userauth_passwd.attempt 1
+userauth_passwd
+91 $userauth_kbdint.attempt 1
+userauth_kbdint
+92 $ssh_packet_disconnect.disconnecting 1
+ssh_packet_disconnect
+93 $active_state 82
+channel_free
+channel_not_very_much_buffered_data
+channel_send_open
+channel_request_start
+channel_set_fds
+channel_output_poll
+channel_proxy_downstream
+channel_proxy_upstream
+channel_input_data
+channel_input_extended_data
+channel_input_ieof
+channel_input_close
+channel_input_oclose
+channel_input_close_confirmation
+channel_input_open_confirmation
+channel_input_open_failure
+channel_input_window_adjust
+channel_input_port_open
+channel_input_status_confirm
+channel_request_remote_forwarding
+channel_send_window_changes
+x11_input_open
+deny_input_open
+x11_request_forwarding_with_spoofing
+auth_request_forwarding
 main
-shut_down
-handle_newconnect
-thttpd_logstats
-20 $count 1
+ssh_session2
+ssh_session
+ssh_session2_setup
+ssh_exchange_identification
+ssh_login
+ssh_put_password
+ssh_kex2
+userauth_hostbased
+userauth_kbdint
+userauth_passwd
+userauth_none
+ssh_userauth2
+input_userauth_ext_info
+input_userauth_service_accept
+input_userauth_failure
+input_userauth_banner
+userauth
+input_userauth_pk_ok
+input_userauth_passwd_changereq
+input_userauth_info_req
+ssh_keysign
+send_pubkey_test
+sign_and_send_pubkey
+identity_sign_encode
+mux_session_confirm
+channel_post_auth_listener
+channel_post_x11_listener
+channel_pre_open
+channel_pre_input_draining
+channel_pre_x11_open_13
+channel_pre_open_13
+port_open_helper
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+channel_post_connecting
+channel_check_window
+channel_handle_wfd
+chan_send_eof2
+chan_send_ieof1
+chan_send_oclose1
+chan_send_close2
+chan_send_eow2
+packet_set_connection
+packet_get_char
+packet_get_int
+packet_read_seqnr
+packet_read_poll_seqnr
+packet_close
+packet_process_incoming
+packet_write_wait
+packet_write_poll
+packet_read_expect
+packet_disconnect
+packet_send_debug
+tty_make_modes
+dispatch_protocol_error
+94 $saved_euid 2
+temporarily_use_uid
+restore_uid
+95 $saved_egid 2
+temporarily_use_uid
+restore_uid
+96 $privileged 2
+temporarily_use_uid
+restore_uid
+97 $temporarily_use_uid_effective 3
+temporarily_use_uid
+restore_uid
+permanently_set_uid
+98 $saved_egroupslen 2
+temporarily_use_uid
+restore_uid
+99 $saved_egroups 2
+temporarily_use_uid
+restore_uid
+100 $user_groupslen 1
+temporarily_use_uid
+101 $user_groups 1
+temporarily_use_uid
+102 $monotime.gettime_failed 1
+monotime
+103 $monotime_double.gettime_failed 1
+monotime_double
+104 $errset_text 1
+dns_result_totext
+105 $pkcs11_interactive 2
+pkcs11_init
+pkcs11_rsa_private_encrypt
+106 $pkcs11_providers 5
+pkcs11_init
+pkcs11_terminate
+pkcs11_del_provider
+pkcs11_add_provider
+pkcs11_provider_lookup
+107 $digests 2
+ssh_digest_alg_by_name
+ssh_digest_by_alg
+108 $iv 1
+crypto_hash_sha512
+109 $proposal_names 1
+kex_buf2prop
+110 $sshbuf_dtob16.hex 1
+sshbuf_dtob16
+111 $channels_alloc 19
+channel_by_id
+channel_by_remote_id
+channel_new
+channel_free
+channel_open_message
+channel_free_all
+channel_close_all
+channel_stop_listening
+channel_not_very_much_buffered_data
+channel_still_open
+channel_find_open
+channel_output_poll
+channel_send_window_changes
+channel_find_maxfd
+channel_handler
+channel_cancel_rport_listener_streamlocal
+channel_cancel_rport_listener_tcpip
+channel_cancel_lport_listener_streamlocal
+channel_cancel_lport_listener_tcpip
+112 $channels 19
+channel_by_id
+channel_by_remote_id
+channel_new
+channel_free
+channel_open_message
+channel_free_all
+channel_close_all
+channel_stop_listening
+channel_not_very_much_buffered_data
+channel_still_open
+channel_find_open
+channel_output_poll
+channel_send_window_changes
+channel_find_maxfd
+channel_handler
+channel_cancel_rport_listener_streamlocal
+channel_cancel_rport_listener_tcpip
+channel_cancel_lport_listener_streamlocal
+channel_cancel_lport_listener_tcpip
+113 $channel_max_fd 4
+channel_close_fd
+channel_prepare_select
+channel_register_fds
+channel_post_connecting
+114 $num_permitted_opens 13
+channel_free
+channel_proxy_downstream
+channel_connect_to_port
+channel_request_remote_forwarding
+channel_permit_all_opens
+channel_add_permitted_opens
+channel_update_permitted_opens
+channel_clear_permitted_opens
+channel_connect_by_listen_address
+channel_connect_by_listen_path
+channel_connect_to_path
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+115 $permitted_opens 12
+channel_free
+channel_proxy_downstream
+channel_connect_to_port
+channel_request_remote_forwarding
+channel_add_permitted_opens
+channel_update_permitted_opens
+channel_clear_permitted_opens
+channel_connect_by_listen_address
+channel_connect_by_listen_path
+channel_connect_to_path
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+116 $x11_refuse_time1454 2
+channel_set_x11_refuse_time
+x11_open_helper
+117 $compat13 9
+channel_still_open
+channel_find_open
+channel_output_poll
+channel_input_data
+client_init_dispatch
+channel_handle_rfd
+channel_handler_init
+channel_handle_wfd
+enable_compat13
+118 $compat20 55
+channel_still_open
+channel_output_poll
+channel_input_data
+channel_input_open_confirmation
+channel_input_open_failure
+channel_input_window_adjust
+channel_request_remote_forwarding
+x11_request_forwarding_with_spoofing
 main
-21 $data_dir 3
-main
-parse_args
-read_config
-22 $got_hup 2
-main
-handle_hup
-23 $got_usr1 2
-main
-handle_usr1
-24 $watchdog_flag 3
-main
-handle_alrm
-occasional
-25 $hostname 4
-main
-parse_args
-lookup_hostname
-read_config
-26 $port 4
-main
-parse_args
-lookup_hostname
-read_config
-27 $cgi_pattern 3
-main
-parse_args
-read_config
-28 $url_pattern 3
-main
-parse_args
-read_config
-29 $local_pattern 3
-main
-parse_args
-read_config
-30 $no_empty_referrers 3
-main
-parse_args
-read_config
-31 $hs 5
-main
-handle_chld
-shut_down
-re_open_logfile
-handle_newconnect
-32 $cgi_limit 3
-main
-parse_args
-read_config
-33 $charset 3
-main
-parse_args
-read_config
-34 $p3p 3
-main
-parse_args
-read_config
-35 $max_age 3
-main
-parse_args
-read_config
-36 $no_symlink_check 3
-main
-parse_args
-read_config
-37 $do_vhost 3
-main
-parse_args
-read_config
-38 $do_global_passwd 3
-main
-parse_args
-read_config
-39 $stderr 8
-main
-lookup_hostname
-read_throttlefile
-no_value_required
-e_strdup
-usage
-read_config
-value_required
-40 $user 3
-main
-parse_args
-read_config
-41 $numthrottles 4
-main
-read_throttlefile
-update_throttles
-check_throttles
-42 $maxthrottles 2
-main
-read_throttlefile
-43 $throttles 8
-main
-read_throttlefile
-update_throttles
-shut_down
-handle_read
-handle_send
-clear_throttles
-check_throttles
-44 $throttlefile 3
-main
-parse_args
-read_config
-45 $sub_process 5
-cgi
-cgi_child
-post_post_garbage_hack
-ls
-httpd_write_response
-46 $str_alloc_count 2
-httpd_logstats
-httpd_realloc_str
-47 $str_alloc_size 2
-httpd_logstats
-httpd_realloc_str
-48 $really_start_request.indexname 2
-really_start_request
-httpd_realloc_str
-49 $really_start_request.maxindexname 2
-really_start_request
-httpd_realloc_str
-50 $really_start_request.index_names 1
-really_start_request
-51 $really_start_request.dirname 2
-really_start_request
-httpd_realloc_str
-52 $really_start_request.maxdirname 2
-really_start_request
-httpd_realloc_str
-53 $enc_tab 2
-init_mime
-figure_mime
-54 $typ_tab 2
-init_mime
-figure_mime
-55 $httpd_initialize.ghnbuf 1
-httpd_initialize
-56 $httpd_ntoa.str 1
-httpd_ntoa
-57 $expand_symlinks.checked 2
-expand_symlinks
-httpd_realloc_str
-58 $expand_symlinks.rest 2
-expand_symlinks
-httpd_realloc_str
-59 $expand_symlinks.maxchecked 2
-expand_symlinks
-httpd_realloc_str
-60 $expand_symlinks.maxrest 2
-expand_symlinks
-httpd_realloc_str
-61 $vhost_map.tempfilename 2
-vhost_map
-httpd_realloc_str
-62 $vhost_map.maxtempfilename 2
-vhost_map
-httpd_realloc_str
-63 $nfiles 9
-fdwatch_get_nfiles
-fdwatch_add_fd
-fdwatch_del_fd
-fdwatch_check_fd
-fdwatch_get_next_client_data
-poll_add_fd
-poll_del_fd
-poll_check_fd
-poll_get_fd
-64 $nwatches 3
-fdwatch_get_nfiles
-fdwatch
-fdwatch_logstats
-65 $fd_rw 5
-fdwatch_get_nfiles
-fdwatch_add_fd
-fdwatch_del_fd
-fdwatch_check_fd
-poll_check_fd
-66 $fd_data 4
-fdwatch_get_nfiles
-fdwatch_add_fd
-fdwatch_del_fd
-fdwatch_get_next_client_data
-67 $nreturned 2
-fdwatch
-fdwatch_get_next_client_data
-68 $next_ridx 2
-fdwatch
-fdwatch_get_next_client_data
-69 $poll_rfdidx 3
-poll_init
-poll_watch
-poll_get_fd
-70 $poll_fdidx 4
-poll_init
-poll_add_fd
-poll_del_fd
-poll_check_fd
-71 $pollfds 5
-poll_init
-poll_add_fd
-poll_del_fd
-poll_watch
-poll_check_fd
-72 $npoll_fds 3
-poll_add_fd
-poll_del_fd
-poll_watch
-73 $free_maps 4
-mmc_map
-mmc_cleanup
-mmc_term
-really_unmap
-74 $free_count 5
-mmc_map
-mmc_cleanup
-mmc_term
-mmc_logstats
-really_unmap
-75 $alloc_count 4
-mmc_map
-mmc_cleanup
-mmc_term
-mmc_logstats
-76 $maps 5
-mmc_map
-mmc_unmap
-mmc_term
-check_hash_size
-really_unmap
-77 $map_count 5
-mmc_map
-mmc_cleanup
-mmc_logstats
-check_hash_size
-really_unmap
-78 $mapped_bytes 4
-mmc_map
-mmc_cleanup
-mmc_logstats
-really_unmap
-79 $expire_age 2
-mmc_cleanup
-mmc_logstats
-80 $hash_size 4
-mmc_logstats
-check_hash_size
-find_hash
-add_hash
-81 $hash_mask 4
-check_hash_size
-find_hash
-add_hash
-hash
-82 $hash_table 4
-check_hash_size
-find_hash
-add_hash
-really_unmap
-83 $timers 6
-tmr_term
-l_add
-tmr_init
-tmr_mstimeout
-tmr_run
-l_remove
-84 $free_timers 4
-tmr_init
-tmr_create
-tmr_cancel
-tmr_cleanup
-85 $free_count597 5
-tmr_logstats
-tmr_init
-tmr_create
-tmr_cancel
-tmr_cleanup
-86 $active_count 4
-tmr_logstats
-tmr_init
-tmr_create
-tmr_cancel
-87 $alloc_count598 4
-tmr_logstats
-tmr_init
-tmr_create
-tmr_cleanup
-88 $tmr_timeout.timeout 1
-tmr_timeout
-89 $JunkClientData 1
-main
-90 $tm_to_time.monthtab 1
-tm_to_time
-91 $make_envp.envp 1
-make_envp
-92 $build_env.buf 2
-build_env
-httpd_realloc_str
-93 $build_env.maxbuf 2
-build_env
-httpd_realloc_str
-94 $ls.maxnames 1
-ls
-95 $ls.names 1
-ls
-96 $ls.nameptrs 1
-ls
-97 $ls.name 2
-ls
-httpd_realloc_str
-98 $ls.maxname 2
-ls
-httpd_realloc_str
-99 $ls.rname 2
-ls
-httpd_realloc_str
-100 $ls.maxrname 2
-ls
-httpd_realloc_str
-101 $ls.encrname 2
-ls
-httpd_realloc_str
-102 $ls.maxencrname 2
-ls
-httpd_realloc_str
-103 $really_check_referrer.refhost 2
-really_check_referrer
-httpd_realloc_str
-104 $really_check_referrer.refhost_size 2
-really_check_referrer
-httpd_realloc_str
-105 $auth_check2.authpath 2
-auth_check2
-httpd_realloc_str
-106 $auth_check2.maxauthpath 2
-auth_check2
-httpd_realloc_str
-107 $auth_check2.prevauthpath 2
-auth_check2
-httpd_realloc_str
-108 $auth_check2.maxprevauthpath 2
-auth_check2
-httpd_realloc_str
-109 $auth_check2.prevmtime 1
-auth_check2
-110 $auth_check2.prevuser 2
-auth_check2
-httpd_realloc_str
-111 $auth_check2.maxprevuser 2
-auth_check2
-httpd_realloc_str
-112 $auth_check2.prevcryp 2
-auth_check2
-httpd_realloc_str
-113 $auth_check2.maxprevcryp 2
-auth_check2
-httpd_realloc_str
-114 $b64_decode_table 1
-b64_decode
-115 $send_authenticate.header 2
-send_authenticate
-httpd_realloc_str
-116 $send_authenticate.maxheader 2
-send_authenticate
-httpd_realloc_str
-117 $send_dirredirect.location 2
-send_dirredirect
-httpd_realloc_str
-118 $send_dirredirect.header 2
-send_dirredirect
-httpd_realloc_str
-119 $send_dirredirect.maxlocation 2
-send_dirredirect
-httpd_realloc_str
-120 $send_dirredirect.maxheader 2
-send_dirredirect
-httpd_realloc_str
-121 $scan_wday.sorted 1
-scan_wday
-122 $scan_mon.sorted 1
-scan_mon
+ssh_init_stdio_forwarding
+client_loop
+client_request_tun_fwd
+process_escapes
+client_init_dispatch
+client_check_window_change
+client_wait_until_can_do_something
+process_cmdline
+verify_host_key
+ssh_login
+send_client_banner
+channel_post_auth_listener
+channel_post_x11_listener
+channel_pre_x11_open
+channel_pre_open
+port_open_helper
+channel_request_rforward_cancel_streamlocal
+channel_request_rforward_cancel_tcpip
+channel_handler_init
+channel_post_connecting
+channel_post_open
+channel_handle_wfd
+channel_post_mux_client
+enable_compat20
+chan_ibuf_empty
+chan_obuf_empty
+chan_rcvd_ieof
+chan_rcvd_oclose
+chan_write_failed
+chan_is_dead
+chan_shutdown_read
+chan_shutdown_write
+ssh_packet_is_rekeying
+ssh_packet_start_compression
+ssh_packet_read_seqnr
+ssh_packet_read_poll_seqnr
+sshpkt_disconnect
+ssh_packet_send_debug
+sshpkt_start
+sshpkt_send
+ssh_packet_send_ignore
+ssh_packet_get_state
+ssh_packet_set_state
+tty_make_modes
+tty_parse_modes
+dispatch_protocol_error
+119 $datafellows 28
+channel_input_extended_data
+channel_input_open_failure
+channel_update_permitted_opens
+ssh_session2
+process_escapes
+client_input_channel_open
+client_request_x11
+ssh_exchange_identification
+ssh_put_password
+userauth_hostbased
+input_userauth_pk_ok
+try_identity
+send_pubkey_test
+sign_and_send_pubkey
+channel_post_x11_listener
+channel_rfwd_bind_host
+channel_setup_fwd_listener_tcpip
+channel_fwd_bind_addr
+channel_post_connecting
+compat_datafellows
+compat_cipher_proposal
+compat_pkalg_proposal
+compat_kex_proposal
+chan_is_dead
+chan_send_eow2
+key_sign
+key_verify
+kexgex_client
+120 $argv0 3
+do_log
+log_init
+log_change_level
+121 $log_level 2
+do_log
+log_init
+122 $log_handler 3
+do_log
+log_init
+set_log_handler
+123 $log_handler_ctx 3
+do_log
+log_init
+set_log_handler
+124 $log_on_stderr 4
+do_log
+log_init
+log_change_level
+log_is_on_stderr
+125 $log_facility 3
+do_log
+log_init
+log_change_level
+126 $log_stderr_fd 3
+do_log
+log_is_on_stderr
+log_redirect_stderr_to
+127 $ostates 1
+chan_set_ostate
+128 $istates 1
+chan_set_istate
+129 $crc32tab 1
+ssh_crc32
+130 $m 2
+barrett_reduce
+reduce_add_sub
+131 $mu 1
+barrett_reduce
+132 $crypto_sign_ed25519_ref_ge25519_base 2
+crypto_sign_ed25519_ref_double_scalarmult_vartime
+crypto_sign_ed25519_open
+133 $ge25519_ecd 2
+crypto_sign_ed25519_ref_unpackneg_vartime
+crypto_sign_ed25519_ref_fe25519_mul
+134 $ge25519_sqrtm1 2
+crypto_sign_ed25519_ref_unpackneg_vartime
+crypto_sign_ed25519_ref_fe25519_mul
+135 $ge25519_ec2d 3
+add_p1p1
+ge25519_mixadd2
+crypto_sign_ed25519_ref_fe25519_mul
+136 $ge25519_base_multiples_affine 1
+choose_t

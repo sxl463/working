@@ -1,7 +1,7 @@
-0 @debug_flag 2
+0 $debug_flag 2
 main
 control_persist_detach
-1 @tty_flag 7
+1 $tty_flag 7
 main
 ssh_session2
 ssh_session
@@ -9,7 +9,7 @@ control_persist_detach
 ssh_session2_open
 ssh_session2_setup
 mux_client_request_session
-2 @stdin_null_flag 7
+2 $stdin_null_flag 7
 main
 ssh_session2
 control_persist_detach
@@ -17,37 +17,37 @@ ssh_session2_open
 client_check_initial_eof_on_stdin
 mux_client_request_session
 mux_client_request_stdio_fwd
-3 @need_controlpersist_detach 2
+3 $need_controlpersist_detach 2
 ssh_session2
 fork_postauth
-4 @saved_av 1
+4 $saved_av 1
 main
-5 @original_effective_uid 2
+5 $original_effective_uid 2
 main
 ssh_create_socket
-6 @fork_after_authentication_flag 6
+6 $fork_after_authentication_flag 6
 main
 ssh_session2
 ssh_session
 fork_postauth
 ssh_confirm_remote_forward
 client_loop
-7 @config 2
+7 $config 2
 main
 process_config_files
-8 @subsystem_flag 3
+8 $subsystem_flag 3
 main
 ssh_session2_setup
 mux_client_request_session
-9 @__progname 5
+9 $__progname 5
 main
 resolve_canonicalize
 resolve_host
 do_log
 log_init
-10 @BSDoptarg 1
+10 $BSDoptarg 1
 main
-11 @original_real_uid 8
+11 $original_real_uid 8
 main
 load_public_identity_files
 tilde_expand_paths
@@ -56,9 +56,98 @@ execute_in_shell
 ssh_proxy_fdpass_connect
 ssh_proxy_connect
 ssh_create_socket
-12 @host 12
+12 $options 86
 main
 process_config_files
+resolve_canonicalize
+resolve_host
+check_follow_cname
+load_public_identity_files
+ssh_session2
+ssh_session
+control_persist_detach
+ssh_session2_setup
+check_agent_present
+fill_default_options
+ssh_init_forwarding
+ssh_confirm_remote_forward
+ssh_init_stdio_forwarding
+resolve_addr
+add_local_forward
+add_remote_forward
+add_identity_file
+process_config_line
+read_config_file
+initialize_options
+fill_default_options_for_canonicalization
+parse_jump
+dump_client_config
+client_loop
+client_request_tun_fwd
+client_session2_setup
+client_stop_mux
+cleanup_exit
+expand_proxy_command
+client_status_confirm
+process_escapes
+client_channel_closed
+client_wait_until_can_do_something
+client_init_dispatch_13
+client_input_hostkeys
+update_known_hosts
+client_request_agent
+client_request_x11
+server_alive_check
+set_control_persist_exit_time
+process_cmdline
+client_suspend_self
+ssh_connect
+ssh_exchange_identification
+get_hostfile_hostname_ipaddr
+verify_host_key
+ssh_login
+ssh_local_cmd
+maybe_add_key_to_agent
+ssh_proxy_fdpass_connect
+ssh_proxy_connect
+warn_changed_key
+check_host_key
+confirm
+show_other_keys
+ssh_create_socket
+ssh_kex2
+userauth_hostbased
+userauth_kbdint
+userauth_passwd
+ssh_userauth2
+input_userauth_banner
+input_userauth_pk_ok
+input_userauth_passwd_changereq
+order_hostkeyalgs
+load_identity_file
+sign_and_send_pubkey
+pubkey_prepare
+authmethod_get
+muxserver_listen
+muxclient
+mux_client_forwards
+mux_client_request_session
+mux_client_request_stdio_fwd
+env_permitted
+format_forward
+process_mux_stop_listening
+process_mux_stdio_fwd
+process_mux_close_fwd
+process_mux_open_fwd
+mux_confirm_remote_forward
+process_mux_terminate
+process_mux_new_session
+mux_session_confirm
+13 $host 14
+main
+process_config_files
+resolve_canonicalize
+check_follow_cname
 load_public_identity_files
 client_loop
 client_process_net_input
@@ -69,7 +158,17 @@ process_mux_stop_listening
 process_mux_open_fwd
 process_mux_terminate
 process_mux_new_session
-13 @stderr 14
+14 $command 9
+buffer_append
+main
+ssh_session
+ssh_session2_setup
+client_session2_setup
+mux_client_request_session
+sshbuf_len
+sshbuf_init
+sshbuf_mutable_ptr
+15 $stderr 14
 sshkey_dump_ec_point
 sshkey_dump_ec_key
 main
@@ -84,20 +183,26 @@ mux_client_request_session
 log_init
 log_redirect_stderr_to
 sanitise_stdfd
-14 @no_shell_flag 5
+16 $no_shell_flag 5
 main
 ssh_session2
 ssh_session2_open
 client_loop
 client_stop_mux
-15 @BSDoptind 1
+17 $hostaddr 2
 main
-16 @BSDoptreset 1
+ssh_connect
+18 $sensitive_data 2
 main
-17 @environ 2
+ssh_login
+19 $BSDoptind 1
+main
+20 $BSDoptreset 1
+main
+21 $environ 2
 ssh_session2_setup
 mux_client_request_session
-18 @stdin 12
+22 $stdin 12
 main
 ssh_session
 ssh_session2_setup
@@ -110,63 +215,70 @@ leave_non_blocking
 enter_non_blocking
 leave_raw_mode
 enter_raw_mode
-19 @shen_start 2
+23 $shen_start 2
 client_loop
 ssh_connect_direct
-20 @shen_end 1
+24 $shen_end 1
 client_loop
-21 @cpu_time_used 1
+25 $cpu_time_used 1
 client_loop
-22 @ostdin_null_flag 2
+26 $ostdin_null_flag 2
 ssh_session2
 control_persist_detach
-23 @ono_shell_flag 1
+27 $ono_shell_flag 1
 ssh_session2
-24 @otty_flag 2
-ssh_session2
-control_persist_detach
-25 @orequest_tty 2
+28 $otty_flag 2
 ssh_session2
 control_persist_detach
-26 @remote_forward_confirms_received 1
+29 $orequest_tty 2
+ssh_session2
+control_persist_detach
+30 $remote_forward_confirms_received 1
 ssh_confirm_remote_forward
-27 @default_ssh_port.port 1
+31 $default_ssh_port.port 1
 default_ssh_port
-28 @session_ident 3
+32 $session_ident 3
 client_loop
 client_status_confirm
 client_input_channel_req
-29 @x11_refuse_time 2
+33 $client_x11_get_proto.proto 1
+client_x11_get_proto
+34 $client_x11_get_proto.data 1
+client_x11_get_proto
+35 $x11_refuse_time 2
 client_x11_get_proto
 client_request_x11
-30 @escape_pending1 2
+36 $global_confirms 2
+client_register_global_confirm
+client_global_request_reply
+37 $escape_pending1 2
 client_loop
 client_check_initial_eof_on_stdin
-31 @last_was_cr 2
+38 $last_was_cr 2
 client_loop
 process_escapes
-32 @exit_status 3
+39 $exit_status 3
 client_loop
 client_input_exit_status
 client_input_channel_req
-33 @stdin_eof 6
+40 $stdin_eof 6
 client_loop
 process_escapes
 client_check_initial_eof_on_stdin
 client_make_packets_from_stdin_data
 client_wait_until_can_do_something
 client_process_input
-34 @buffer_high 2
+41 $buffer_high 2
 client_loop
 client_wait_until_can_do_something
-35 @connection_in 3
+42 $connection_in 3
 client_loop
 client_wait_until_can_do_something
 client_process_net_input
-36 @connection_out 2
+43 $connection_out 2
 client_loop
 client_wait_until_can_do_something
-37 @stdout 8
+44 $stdout 8
 client_loop
 client_wait_until_can_do_something
 client_process_output
@@ -175,7 +287,7 @@ ssh_keysign
 mux_client_forward
 ssh_askpass
 mprintf
-38 @quit_pending 9
+45 $quit_pending 9
 client_loop
 process_escapes
 signal_handler
@@ -185,56 +297,96 @@ client_process_output
 client_input_exit_status
 update_known_hosts
 process_mux_terminate
-39 @escape_char1 4
+46 $escape_char1 4
 client_loop
 process_escapes
 client_check_initial_eof_on_stdin
 client_process_input
-40 @session_closed 4
+47 $stdin_buffer 11
+buffer_append
+buffer_consume
+client_loop
+process_escapes
+client_check_initial_eof_on_stdin
+client_make_packets_from_stdin_data
+client_process_input
+sshbuf_len
+sshbuf_free
+sshbuf_init
+sshbuf_mutable_ptr
+48 $stdout_buffer 12
+buffer_append
+buffer_consume
+client_loop
+process_escapes
+client_wait_until_can_do_something
+client_process_input
+client_process_output
+client_input_stdout_data
+sshbuf_len
+sshbuf_free
+sshbuf_init
+sshbuf_mutable_ptr
+49 $stderr_buffer 13
+buffer_append
+buffer_consume
+client_loop
+process_escapes
+client_wait_until_can_do_something
+client_process_net_input
+client_process_input
+client_process_output
+client_input_stderr_data
+sshbuf_len
+sshbuf_free
+sshbuf_init
+sshbuf_mutable_ptr
+50 $session_closed 4
 client_loop
 client_stop_mux
 client_channel_closed
 client_wait_until_can_do_something
-41 @need_rekeying 2
+51 $need_rekeying 2
 client_loop
 process_escapes
-42 @control_persist_exit_time 3
+52 $control_persist_exit_time 3
 client_loop
 client_wait_until_can_do_something
 set_control_persist_exit_time
-43 @received_signal 2
+53 $received_signal 2
 client_loop
 signal_handler
-44 @in_non_blocking_mode 2
+54 $in_non_blocking_mode 2
 leave_non_blocking
 enter_non_blocking
-45 @client_input_hostkeys.hostkeys_seen 1
+55 $client_input_hostkeys.hostkeys_seen 1
 client_input_hostkeys
-46 @_in_raw_mode 3
+56 $_in_raw_mode 3
 get_saved_tio
 leave_raw_mode
 enter_raw_mode
-47 @client_version_string 2
+57 $client_version_string 3
 send_client_banner
 ssh_kex2
-48 @server_version_string 2
+xasprintf
+58 $server_version_string 2
 ssh_exchange_identification
 ssh_kex2
-49 @previous_host_key 1
+59 $previous_host_key 1
 verify_host_key
-50 @proxy_command_pid 2
+60 $proxy_command_pid 2
 ssh_kill_proxy_command
 ssh_proxy_connect
-51 @matching_host_key_dns 2
+61 $matching_host_key_dns 2
 verify_host_key
 check_host_key
-52 @supported 1
+62 $supported 1
 authmethod_get
-53 @preferred 1
+63 $preferred 1
 authmethod_get
-54 @current 1
+64 $current 1
 authmethod_get
-55 @muxserver_sock 8
+65 $muxserver_sock 8
 main
 ssh_session2
 control_persist_detach
@@ -243,7 +395,7 @@ cleanup_exit
 set_control_persist_exit_time
 muxserver_listen
 process_mux_stop_listening
-56 @muxclient_request_id 7
+66 $muxclient_request_id 7
 mux_client_request_alive
 mux_client_request_terminate
 mux_client_request_session
@@ -251,92 +403,104 @@ mux_client_request_stdio_fwd
 mux_client_request_stop_listening
 mux_client_proxy
 mux_client_forward
-57 @muxclient_command 3
+67 $muxclient_command 3
 main
 muxclient
 mux_client_forward
-58 @mux_listener_channel 2
+68 $mux_listener_channel 2
 muxserver_listen
 process_mux_stop_listening
-59 @muxclient_terminate 5
+69 $muxclient_terminate 5
 mux_client_request_session
 mux_client_request_stdio_fwd
 mux_client_read
 mux_client_write_packet
 control_client_sighandler
-60 @muxserver_pid 3
+70 $muxserver_pid 3
 mux_client_request_session
 mux_client_request_stdio_fwd
 control_client_sigrelay
-61 @received_window_change_signal 3
+71 $mux_master_handlers 1
+mux_master_read_cb
+72 $received_window_change_signal 3
 window_change_handler
 client_check_window_change
 client_suspend_self
-62 @IPv4or6 5
+73 $channel_pre 4
+channel_handler_init_13
+channel_handler_init
+channel_handler_init_15
+channel_handler_init_20
+74 $channel_post 4
+channel_handler_init_13
+channel_handler_init
+channel_handler_init_15
+channel_handler_init_20
+75 $IPv4or6 5
 channel_set_af
 x11_create_display_inet
 x11_connect_display
 connect_to
 channel_setup_fwd_listener_tcpip
-63 @all_opens_permitted 4
+76 $all_opens_permitted 4
 channel_connect_to_port
 channel_permit_all_opens
 channel_add_permitted_opens
 channel_connect_to_path
-64 @permitted_adm_opens 6
+77 $permitted_adm_opens 6
 channel_connect_to_port
 channel_add_adm_permitted_opens
 channel_disable_adm_local_opens
 channel_clear_adm_permitted_opens
 channel_print_adm_permitted_opens
 channel_connect_to_path
-65 @num_adm_permitted_opens 6
+78 $num_adm_permitted_opens 6
 channel_connect_to_port
 channel_add_adm_permitted_opens
 channel_disable_adm_local_opens
 channel_clear_adm_permitted_opens
 channel_print_adm_permitted_opens
 channel_connect_to_path
-66 @x11_saved_display 1
+79 $x11_saved_display 1
 x11_request_forwarding_with_spoofing
-67 @x11_saved_proto 2
-x11_request_forwarding_with_spoofing
-x11_open_helper
-68 @x11_saved_data 2
+80 $x11_saved_proto 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-69 @x11_saved_data_len 2
+81 $x11_saved_data 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-70 @x11_fake_data 2
+82 $x11_saved_data_len 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-71 @x11_fake_data_len 2
+83 $x11_fake_data 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-72 @channel_handler.did_init 1
+84 $x11_fake_data_len 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+85 $channel_handler.did_init 1
 channel_handler
-73 @session_id2 3
+86 $session_id2 3
 ssh_kex2
 userauth_hostbased
 sign_and_send_pubkey
-74 @session_id2_len 3
+87 $session_id2_len 3
 ssh_kex2
 userauth_hostbased
 sign_and_send_pubkey
-75 @xxx_host 2
+88 $xxx_host 2
 ssh_kex2
 verify_host_key_callback
-76 @xxx_hostaddr 2
+89 $xxx_hostaddr 2
 ssh_kex2
 verify_host_key_callback
-77 @userauth_passwd.attempt 1
+90 $userauth_passwd.attempt 1
 userauth_passwd
-78 @userauth_kbdint.attempt 1
+91 $userauth_kbdint.attempt 1
 userauth_kbdint
-79 @ssh_packet_disconnect.disconnecting 1
+92 $ssh_packet_disconnect.disconnecting 1
 ssh_packet_disconnect
-80 @active_state 82
+93 $active_state 82
 channel_free
 channel_not_very_much_buffered_data
 channel_send_open
@@ -419,37 +583,54 @@ packet_disconnect
 packet_send_debug
 tty_make_modes
 dispatch_protocol_error
-81 @saved_euid 2
+94 $saved_euid 2
 temporarily_use_uid
 restore_uid
-82 @saved_egid 2
+95 $saved_egid 2
 temporarily_use_uid
 restore_uid
-83 @privileged 2
+96 $privileged 2
 temporarily_use_uid
 restore_uid
-84 @temporarily_use_uid_effective 3
+97 $temporarily_use_uid_effective 3
 temporarily_use_uid
 restore_uid
 permanently_set_uid
-85 @saved_egroupslen 2
+98 $saved_egroupslen 2
 temporarily_use_uid
 restore_uid
-86 @saved_egroups 2
+99 $saved_egroups 2
 temporarily_use_uid
 restore_uid
-87 @user_groupslen 1
+100 $user_groupslen 1
 temporarily_use_uid
-88 @user_groups 1
+101 $user_groups 1
 temporarily_use_uid
-89 @monotime.gettime_failed 1
+102 $monotime.gettime_failed 1
 monotime
-90 @monotime_double.gettime_failed 1
+103 $monotime_double.gettime_failed 1
 monotime_double
-91 @pkcs11_interactive 2
+104 $errset_text 1
+dns_result_totext
+105 $pkcs11_interactive 2
 pkcs11_init
 pkcs11_rsa_private_encrypt
-92 @channels_alloc 19
+106 $pkcs11_providers 5
+pkcs11_init
+pkcs11_terminate
+pkcs11_del_provider
+pkcs11_add_provider
+pkcs11_provider_lookup
+107 $digests 2
+ssh_digest_alg_by_name
+ssh_digest_by_alg
+108 $iv 1
+crypto_hash_sha512
+109 $proposal_names 1
+kex_buf2prop
+110 $sshbuf_dtob16.hex 1
+sshbuf_dtob16
+111 $channels_alloc 19
 channel_by_id
 channel_by_remote_id
 channel_new
@@ -469,7 +650,7 @@ channel_cancel_rport_listener_streamlocal
 channel_cancel_rport_listener_tcpip
 channel_cancel_lport_listener_streamlocal
 channel_cancel_lport_listener_tcpip
-93 @channels 19
+112 $channels 19
 channel_by_id
 channel_by_remote_id
 channel_new
@@ -489,12 +670,12 @@ channel_cancel_rport_listener_streamlocal
 channel_cancel_rport_listener_tcpip
 channel_cancel_lport_listener_streamlocal
 channel_cancel_lport_listener_tcpip
-94 @channel_max_fd 4
+113 $channel_max_fd 4
 channel_close_fd
 channel_prepare_select
 channel_register_fds
 channel_post_connecting
-95 @num_permitted_opens 13
+114 $num_permitted_opens 13
 channel_free
 channel_proxy_downstream
 channel_connect_to_port
@@ -508,7 +689,7 @@ channel_connect_by_listen_path
 channel_connect_to_path
 channel_request_rforward_cancel_streamlocal
 channel_request_rforward_cancel_tcpip
-96 @permitted_opens 12
+115 $permitted_opens 12
 channel_free
 channel_proxy_downstream
 channel_connect_to_port
@@ -521,10 +702,10 @@ channel_connect_by_listen_path
 channel_connect_to_path
 channel_request_rforward_cancel_streamlocal
 channel_request_rforward_cancel_tcpip
-97 @x11_refuse_time1454 2
+116 $x11_refuse_time1454 2
 channel_set_x11_refuse_time
 x11_open_helper
-98 @compat13 9
+117 $compat13 9
 channel_still_open
 channel_find_open
 channel_output_poll
@@ -534,7 +715,7 @@ channel_handle_rfd
 channel_handler_init
 channel_handle_wfd
 enable_compat13
-99 @compat20 55
+118 $compat20 55
 channel_still_open
 channel_output_poll
 channel_input_data
@@ -590,7 +771,7 @@ ssh_packet_set_state
 tty_make_modes
 tty_parse_modes
 dispatch_protocol_error
-100 @datafellows 28
+119 $datafellows 28
 channel_input_extended_data
 channel_input_open_failure
 channel_update_permitted_opens
@@ -619,47 +800,57 @@ chan_send_eow2
 key_sign
 key_verify
 kexgex_client
-101 @argv0 3
+120 $argv0 3
 do_log
 log_init
 log_change_level
-102 @log_level 2
+121 $log_level 2
 do_log
 log_init
-103 @log_handler 3
-do_log
-log_init
-set_log_handler
-104 @log_handler_ctx 3
+122 $log_handler 3
 do_log
 log_init
 set_log_handler
-105 @log_on_stderr 4
+123 $log_handler_ctx 3
+do_log
+log_init
+set_log_handler
+124 $log_on_stderr 4
 do_log
 log_init
 log_change_level
 log_is_on_stderr
-106 @log_facility 3
+125 $log_facility 3
 do_log
 log_init
 log_change_level
-107 @log_stderr_fd 3
+126 $log_stderr_fd 3
 do_log
 log_is_on_stderr
 log_redirect_stderr_to
-108 @dh_new_group1.gen 1
-dh_new_group1
-109 @dh_new_group1.group1 1
-dh_new_group1
-110 @dh_new_group14.gen 1
-dh_new_group14
-111 @dh_new_group14.group14 1
-dh_new_group14
-112 @dh_new_group16.gen 1
-dh_new_group16
-113 @dh_new_group16.group16 1
-dh_new_group16
-114 @dh_new_group18.gen 1
-dh_new_group18
-115 @dh_new_group18.group16 1
-dh_new_group18
+127 $ostates 1
+chan_set_ostate
+128 $istates 1
+chan_set_istate
+129 $crc32tab 1
+ssh_crc32
+130 $m 2
+barrett_reduce
+reduce_add_sub
+131 $mu 1
+barrett_reduce
+132 $crypto_sign_ed25519_ref_ge25519_base 2
+crypto_sign_ed25519_ref_double_scalarmult_vartime
+crypto_sign_ed25519_open
+133 $ge25519_ecd 2
+crypto_sign_ed25519_ref_unpackneg_vartime
+crypto_sign_ed25519_ref_fe25519_mul
+134 $ge25519_sqrtm1 2
+crypto_sign_ed25519_ref_unpackneg_vartime
+crypto_sign_ed25519_ref_fe25519_mul
+135 $ge25519_ec2d 3
+add_p1p1
+ge25519_mixadd2
+crypto_sign_ed25519_ref_fe25519_mul
+136 $ge25519_base_multiples_affine 1
+choose_t
