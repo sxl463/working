@@ -75,7 +75,7 @@ fi
 echo "building program dependency graph..."
 echo "Done, please enter /visualization and view"
 
-dot -Tsvg -o ./visualization/pdg.svg ./visualization/pdgragh.main.dot
+# dot -Tsvg -o ./visualization/pdg.svg ./visualization/pdgragh.main.dot
 
 #$OPT -load ./pdg.so -view-cdg < test.bc > /dev/null
 

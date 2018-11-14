@@ -11,6 +11,7 @@
 #include <errno.h>
 
 #include "AllPasses.h"
+#include "llvm/IR/Value.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
@@ -133,9 +134,9 @@ set<string> ssh_client_only_set;
 vector<CallPair> callPairsFromPin;
 
 vector<CallEdge> CG; // static call graph
-vector<CallEdge> GlobalCG; // static call graph, only for global variables
 
 set<string> funcNameSet;
+set<string> globalNameSet;
 map<string, int> funcDict;
 set<FidSize*> fidSizeSet;
 set<FidSize*> fidSizeSetForGlobals; // for globals
@@ -448,6 +449,37 @@ void printSSHFuncLabelsToFile(set<FidSize*>& S,
   
 }
 
+bool isPinInCG(string caller, string callee, vector<CallEdge>& CG){
+  bool ret = false;
+  for (auto const& E : CG){
+    if (caller == E.caller && callee == E.callee){
+      ret = true;
+      break;
+    }
+  }
+  return ret;
+}
+
+
+void insertToCallGraph(Function* caller, Function* callee, vector<CallEdge>& CG){
+  CallEdge ce(caller->getName(), callee->getName(), 0, 0.0);
+  bool inCG = false;
+  for (const auto& E : CG){
+    if (E.caller == ce.caller && E.callee == ce.callee){
+      inCG = true;
+      //      E.call_times++;
+      break;
+    }
+  }
+  if (!inCG){
+    ce.type_complexity = computeEdgeComplexity(callee) + 1;
+    errs() << "\n Indirect CALL EDGE <" <<caller->getName() << " --> " << callee->getName() << " > complexity: " << ce.type_complexity << "\n"; 
+    // errs() << "FunctionTy: " << *CI->getCalledFunction()->getFunctionType() << "\n";
+    CG.push_back(ce);
+  } 
+}
+
+
 
 struct GetCallGraph : public ModulePass {
   static char ID;
@@ -481,8 +513,6 @@ struct GetCallGraph : public ModulePass {
 	//	errs() << "ty [" << i <<" ]: " << *ty << "\n";	
 	if (ty->isPointerTy()){
 	  Type* baseTy = getNonPointerBaseTy(ty);
-
-	  //	  Type* pteTy = ty->getContainedType(0);
 	  if (recursiveTypes.find(baseTy) != recursiveTypes.end() || 
 	      prevTypes.find(baseTy) != prevTypes.end()){
 	    errs() << "recursive ty: " << *baseTy << "\n";
@@ -503,8 +533,7 @@ struct GetCallGraph : public ModulePass {
 	  }//end if baseTy->isStructTy
 	}
 
-	if (ty->isStructTy()){
-	  
+	if (ty->isStructTy()){	  
 	  if (recursiveTypes.find(ty) != recursiveTypes.end() || 
 	      prevTypes.find(ty) != prevTypes.end()){
 	    errs() << "recursive ty: " << *ty << "\n";
@@ -512,15 +541,15 @@ struct GetCallGraph : public ModulePass {
 	    prevTypes.insert(ty);
 	  }
 
-	    for (int i = 0; i < ty->getStructNumElements(); i++){
-	      Type* tyi = getNonPointerBaseTy(ty->getStructElementType(i)); 
-	      if (recursiveTypes.find(tyi) != recursiveTypes.end() ||
-		  prevTypes.find(tyi) != prevTypes.end()){
-		errs() << "deep recursive struct: " << *tyi << "\n";
-		prevTypes.insert(tyi);
-		recursiveTypes.insert(tyi);
-	      }
+	  for (int i = 0; i < ty->getStructNumElements(); i++){
+	    Type* tyi = getNonPointerBaseTy(ty->getStructElementType(i)); 
+	    if (recursiveTypes.find(tyi) != recursiveTypes.end() ||
+		prevTypes.find(tyi) != prevTypes.end()){
+	      errs() << "deep recursive struct: " << *tyi << "\n";
+	      prevTypes.insert(tyi);
+	      recursiveTypes.insert(tyi);
 	    }
+	  }
 	}// end ty->isStructTy()
       }
       //      errs() << "\n---------------------------------------\n";
@@ -533,8 +562,6 @@ struct GetCallGraph : public ModulePass {
     for (auto const & I : recursiveTypes){
       errs() << *I << "\n";
     }
-
-
       
     errs() << "============== Start to construct StructTyMap ===============\n";
 
@@ -561,7 +588,7 @@ struct GetCallGraph : public ModulePass {
     ofstream func_id_file;
 
     //          func_id_file.open("./thttpd/thttpd_func_id_map.txt");
-        func_id_file.open("./ssh/ssh_func_id_map.txt");
+    func_id_file.open("./ssh/ssh_func_id_map.txt");
     //    func_id_file.open("./wget/wget_func_id_map.txt");
     //    func_id_file.open("./telnet/telnet_func_id_map.txt");
 
@@ -594,6 +621,7 @@ struct GetCallGraph : public ModulePass {
       FidSize *pfs = new FidSize(F.getName(), fid, NumInsts);
       fidSizeSet.insert(pfs);
       fid++;
+
       //      errs() << "fid: " << fid << "\n"; 
 
       for(BasicBlock &B : F){
@@ -607,24 +635,21 @@ struct GetCallGraph : public ModulePass {
 	      Type* ty = CI->getCalledValue()->getType();
 	      FunctionType* fty = cast<FunctionType>(cast<PointerType>(ty)->getElementType());
 
+	      // %call111 = call i32 bitcast (i32 (%struct.ssh*, i8)* @sshpkt_start to 
+	      // i32 (%struct.ssh.68*, i8)*)(%struct.ssh.68* %100, i8 zeroext 80), !dbg !14101
+	      // get the function from the CallInst with BitCast
+	      Function* calleeInBitCast = dyn_cast<Function>(CI->getCalledValue()->stripPointerCasts());
+	      if (calleeInBitCast != nullptr){
+		errs() << "calleeInBitCast: " << calleeInBitCast->getName() << "\n";
+		insertToCallGraph(&F, calleeInBitCast, CG);
+	      }
+
 	      for(auto &FP : funcSet){
 		if (FP->getFunctionType() == fty){
 		  errs() << "fty: " << *fty << "\n";
 		  errs() << "candidate jump to function: " << FP->getName() << "\n";
-		  CallEdge ce(F.getName(), FP->getName(), 0, 0.0);
-		  bool inCG = false;
-		  for (const auto& E : CG){
-		    if (E.caller == ce.caller && E.callee == ce.callee){
-		      inCG = true;
-		      break;
-		    }
-		  }
-		  if (!inCG){
-		    ce.type_complexity = computeEdgeComplexity(FP) + 1;
-		    errs() << "\n Indirect CALL EDGE <" <<F.getName() << " --> " << FP->getName() << " > complexity: " << ce.type_complexity << "\n"; 
-		    // errs() << "FunctionTy: " << *CI->getCalledFunction()->getFunctionType() << "\n";
-		    CG.push_back(ce);
-		  } 
+
+		  insertToCallGraph(&F, FP, CG);
 		}
 	      }
 	      continue;
@@ -639,20 +664,7 @@ struct GetCallGraph : public ModulePass {
 	    //  indirect call, called Type t = i32 (%struct.cauthctxt*)* 
 
 	    // for call edges between two functions
-	    CallEdge ce(F.getName(), CI->getCalledFunction()->getName(), 0, 0.0);
-	    bool inCG = false;
-	    for (const auto& E : CG){
-	      if (E.caller == ce.caller && E.callee == ce.callee){
-		inCG = true;
-		break;
-	      }
-	    }
-	    if (!inCG){
-	      ce.type_complexity = computeEdgeComplexity(CI->getCalledFunction()) + 1;
-	      // errs() << "\n CALL EDGE <" <<F.getName() << " --> " << CI->getCalledFunction()->getName() << " > complexity: " << ce.type_complexity << "\n"; 
-	      // errs() << "FunctionTy: " << *CI->getCalledFunction()->getFunctionType() << "\n";
-	      CG.push_back(ce);
-	    } 
+	    insertToCallGraph(&F, CI->getCalledFunction(), CG);
 	  }
 	  	  
 	}
@@ -690,13 +702,13 @@ struct GetCallGraph : public ModulePass {
 	}
       }
       
+      FidSize *pfs = new FidSize(strnew, gid, -1);
+      fidSizeSetForGlobals.insert(pfs);
 
-     FidSize *pfs = new FidSize(strnew, gid, -1);
-     fidSizeSetForGlobals.insert(pfs);
-
-     globalDict[strnew] = gid;
-     gid++;
-     //     errs() << strnew << " gid: " << gid << "\n"; 
+      globalDict[strnew] = gid;
+      globalNameSet.insert(strnew);
+      gid++;
+      //     errs() << strnew << " gid: " << gid << "\n"; 
 
       for (auto &F : GF.second){
 	// CallEdge: src dest call_times type_complexity
@@ -740,33 +752,156 @@ struct GetCallGraph : public ModulePass {
     errs() << "non redundant call edges: " << testS.size() << "\n";
 
     //        readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout.txt");
-        readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.pin.txt");
+    readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.pin.txt");
     //    readCallTimesFromPin(callPairsFromPin, "./wget/wget.pin.output");
     //    readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.output");
 
+
+    errs() << "globalNameSet.size: " << globalNameSet.size() << "\n";
+    errs() << "funcNameSet.size: " << funcNameSet.size() << "\n";
+
+    set<string> global_func_set;
+    global_func_set.insert(globalNameSet.begin(), globalNameSet.end());
+    global_func_set.insert(funcNameSet.begin(), funcNameSet.end());
+
+    ofstream tempout;
+    tempout.open("./global_func_set.txt");
+    for(auto const &gf : global_func_set){
+      tempout << gf << "\n";
+    }
+    tempout.close();
+       
+    int temp = 0;
+
+    for(const auto& CP : callPairsFromPin){
+      if ((global_func_set.find(CP.caller) != global_func_set.end()) &&
+	  (global_func_set.find(CP.callee) != global_func_set.end()) ){
+	temp++;
+
+	if (!isPinInCG(CP.caller, CP.callee, CG)){
+	  errs() << "pin_callgraph_WARNING: " << CP.caller << " " << CP.callee << "\n";
+	  // add missing call edge between two functions (caused by indirect calls)
+	  if (CP.caller[0] != '$' && CP.callee[0] != '$'){
+	    Function* caller;
+	    Function* callee;
+	    for (auto& FP : funcSet){
+	      if (FP->getName() == CP.caller)
+		caller = FP;
+	      
+	      if (FP->getName() == CP.callee)
+		callee = FP;
+	    }
+	    insertToCallGraph(caller, callee, CG);
+	    errs() << "Warning_fixed: " << CP.caller << " " << CP.callee << "\n";
+	  }
+
+	  // add missing call edge from function to global
+	  if (CP.caller[0] != '$' && CP.callee[0] == '$'){
+	    for (auto & GF : PDG->globalTaintedFuncMap){
+	      string Str;
+	      raw_string_ostream OS(Str);
+
+	      OS << *(GF.first);
+	      string gv = OS.str();
+	      unsigned first = gv.find("@");
+	      unsigned last = gv.find("=") - 1;
+	      string strnew = gv.substr(first, last-first);
+	      strnew[0] = '$';
+      
+	      if (CP.callee == strnew){
+		int type_complexity = getComplexity(GF.first->getType());
+		CallEdge cge(CP.caller, strnew, 0, type_complexity);
+		bool cgeInCG = false;
+
+		for (const auto& E : CG){
+		  if (E.caller == cge.caller && E.callee == cge.callee){
+		    cgeInCG = true;
+		    break;
+		  }
+		}
+		if (!cgeInCG)
+		  CG.push_back(cge);
+		errs() << "cge_Warning_fixed: " << CP.caller << " " << CP.callee << "\n";
+		break;
+	      }
+	    }// end auto & GF : PDG->globalTaintedFuncMap
+	  }
+
+	  // add missing call edge from global to function
+	  if (CP.caller[0] == '$' && CP.callee[0] != '$'){
+	    for (auto & GF : PDG->globalTaintedFuncMap){
+	      string Str;
+	      raw_string_ostream OS(Str);
+
+	      OS << *(GF.first);
+	      string gv = OS.str();
+	      unsigned first = gv.find("@");
+	      unsigned last = gv.find("=") - 1;
+	      string strnew = gv.substr(first, last-first);
+	      strnew[0] = '$';
+
+	      if (strnew == CP.caller){
+		int type_complexity = getComplexity(GF.first->getType());		
+		CallEdge gce(strnew, CP.callee, 0, type_complexity);
+
+		bool gceInCG = false;
+		for (const auto& E : CG){
+		  if (E.caller == gce.caller && E.callee == gce.callee){
+		    gceInCG = true;
+		    break;
+		  }
+		}
+		if (!gceInCG)
+		  CG.push_back(gce);
+		errs() << "gce_Warning_fixed: " << CP.caller << " " << CP.callee << "\n";
+		break;
+	      }
+	    }// end auto & GF : PDG->globalTaintedFuncMap
+	  }
+	}// 	if (!isPinInCG(CP.caller, CP.callee, CG))
+      }	
+    }
+    errs() << "real callpairs: " << temp << "\n";
+
+    errs() << "global_func_set.txt closed\n";
+    errs() << "callPairsFromPin.size: " << callPairsFromPin.size() << "\n";
+    errs() << "CG.size: " << CG.size() << "\n";
     set<string> invokedF;
+    int count = 0;
+    int range = 0;
+
+    // add call times on edges
     for (const auto& P : callPairsFromPin){
+      count++;
+      //      errs() << "count: " << count << "\n";
+      
+      if(count > 1000){
+	count = 0;
+	range += 1000;
+	errs() << "ratio: " << 1.0*range/callPairsFromPin.size() << "\n";
+      }
+
       for (auto& E : CG){
 	if(invokedF.find(E.caller) == invokedF.end())
 	  invokedF.insert(E.caller);
 	if(invokedF.find(E.callee) == invokedF.end())
 	  invokedF.insert(E.callee);
 
-	if (P.caller == E.caller && P.callee == E.callee){
+	if (P.caller == E.caller && P.callee == E.callee)
 	  E.call_times++;
-	  //	  errs() << "Found runtime call " << E.caller << " " << E.callee << "\n";
-	}
       }
     }
 
     //        string sourceFunc = "auth_check2";
-    	string sourceFunc = "sshkey_parse_private2";
+    string sourceFunc = "sshkey_parse_private2";
     //    string sourceFunc = "fd_read_body";
     //string sourceFunc = "process_rings";
+
 
     errs() << "invoked funcs: " << invokedF.size() << "\b";
     errs() << "sensitive func: " << funcDict[sourceFunc] << "\n";
     errs() << "main func: " << funcDict["main"] << "\n";
+
 
 
     findEdgesWithLeak(CG, PDG->edgesWithParamLeak, PDG->edgesWithReturnLeak);
@@ -779,22 +914,12 @@ struct GetCallGraph : public ModulePass {
 
     errs() << "CallPairsFromPin: " << callPairsFromPin.size() << "\n";
 
-    int temp = 0;
-    for(const auto& CP : callPairsFromPin){
-      if ((funcNameSet.find(CP.caller) != funcNameSet.end()) &&
-	  (funcNameSet.find(CP.callee) != funcNameSet.end()) ){
-	temp++;
-      }
-    }
-    errs() << "real callpairs: " << temp << "\n";
 
 
     //    printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./thttpd_id_code_size.txt");
     printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./ssh_id_code_size.txt");
     //       printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./wget/wget_id_code_size.txt");
     //   printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./telnet/telnet_id_code_size.txt");
-
-
 
     // only for ssh
     printSSHFuncLabelsToFile(fidSizeSet, fidSizeSetForGlobals, ssh_client_only_set, 
