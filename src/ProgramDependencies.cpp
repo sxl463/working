@@ -38,6 +38,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
+#include "llvm/IR/TypeFinder.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Intrinsics.h"
 
@@ -83,7 +84,7 @@ std::map<const llvm::CallInst *,CallWrapper * > CallWrapper::callMap;
 
 
 
-
+std::set<string> typeSet;
 
 std::set<llvm::Value*> allPtrSet;
 std::vector<llvm::Value*> sensitive_values;
@@ -91,7 +92,8 @@ std::vector<InstructionWrapper*> sensitive_nodes;
 
 std::vector<pair<string, string> > edgesWithParamLeak;
 std::vector<pair<string, string> > edgesWithReturnLeak;
-
+// e.g. Key* load_identity_file (...), there should be an big leak number on the return edge 
+std::vector<pair<string, string> > edgesWithPotentialLeak; 
 
 void ProgramDependencyGraph::connectAllPossibleFunctions(InstructionWrapper* CInstW, FunctionType* funcTy){
 
@@ -366,7 +368,9 @@ void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW
 	if(isa<GlobalVariable>(GPI->getPointerOperand())){
 	  //  errs() << "GLOBAL_in_GetElementptrInst: " << *I<< "\n";
 	  //  errs() << "ptr: " << *GPI->getPointerOperand() << "\n" << "is a GlobalVariable\n";
-	  globalTaintedFuncMap[GPI->getPointerOperand()].insert(InstW->getFunction());
+	  GlobalVariable *gv = dyn_cast<GlobalVariable>(GPI->getPointerOperand());
+	  if (!gv->isConstant())
+	    globalTaintedFuncMap[GPI->getPointerOperand()].insert(InstW->getFunction());
 	}
 	InstW->setAccess(true);
       }
@@ -377,7 +381,9 @@ void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW
 	if(gop != nullptr && isa<GlobalVariable>(gop->getPointerOperand())){
 	  // errs() << "GEPOperator(load): " << *gop << "\n" << "is a GEPOperator\n";
 	  // errs() << "GLOBAL_in_GEPOperator: " << *gop->getPointerOperand() << "\n";
-	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
+	  GlobalVariable *gv = dyn_cast<GlobalVariable>(gop->getPointerOperand());
+	  if (!gv->isConstant())
+	    globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
 	}
 	InstW->setAccess(true);
       }
@@ -388,7 +394,9 @@ void ProgramDependencyGraph::FindGlobalsInReadAndWrite(InstructionWrapper* InstW
 	if(gop != nullptr && isa<GlobalVariable>(gop->getPointerOperand())){
 	  // errs() << "GEPOperator(store): " << *gop << "\n" << "is a GEPOperator\n";
 	  // errs() << "GLOBAL_in_GEPOperator: " << *gop->getPointerOperand() << "\n";
-	  globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
+	  GlobalVariable *gv = dyn_cast<GlobalVariable>(gop->getPointerOperand());
+	  if (!gv->isConstant())
+	    globalTaintedFuncMap[gop->getPointerOperand()].insert(InstW->getFunction());		  
 	}
 	InstW->setAccess(true);
       }	      
@@ -460,22 +468,44 @@ void ProgramDependencyGraph::FindGlobalsInCalleeFunction(Function* F,
       }
     }
   }// end for
-
   return;
 }
 
+string getTypeName(Value* val){
+  if (val == nullptr){
+    errs() << "getTypeName null ptr input!\n";
+    exit(1);
+  }
+  Type *ty = val->getType();
+  string type_str;
+  raw_string_ostream rso(type_str);
+  rso << *ty;
+  return rso.str();
+}
 
 
 bool ProgramDependencyGraph::runOnModule(Module &M)
 {
-
   Global_AA = &getAnalysis<AliasAnalysis>();
-
   errs() << "ProgramDependencyGraph::runOnModule" << '\n';
-  
   FunctionWrapper::constructFuncMap(M);
-
   errs() << "funcMap size = " << FunctionWrapper::funcMap.size() << '\n';
+
+  // Type preprocessing
+    TypeFinder allTypes;
+    allTypes.run(M, true);
+    errs() << "======================================= Type List BEGIN ====================================\n";
+    for (auto *ty : allTypes){
+      string type_str;
+      raw_string_ostream rso(type_str);
+      rso << *ty;
+      typeSet.insert(rso.str());
+      errs() << rso.str() << "\n";
+    }
+    errs() << "typeSet size: " << typeSet.size() << "\n";
+    errs() << "======================================= Type List END ====================================\n";
+
+
 
   //Get the Module's list of global variable and function identifiers  
   errs()<<"======Global List: ======\n";
@@ -490,19 +520,16 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       gp_list.push_back(globalW);
 
     // immutable global, e.g. @str = "printf..."
-    if ((*globalIt).isConstant()){
-      //     errs() << "constant global: " << *globalW->getValue() << "\n";
+    if ((*globalIt).isConstant())
       continue;
-    }
+    
     else{
       if (((*globalIt).hasInitializer())){
 	ConstantExpr *CE = dyn_cast<ConstantExpr>((*globalIt).getInitializer());
 	// we use isGEPWithNoNotionalOverIndexing to capture an global like:
 	// @err302form = internal global i8* getelementptr inbounds ([28 x i8]* @.str522, i32 0, i32 0), align 8
-	if (CE != nullptr && CE->isGEPWithNoNotionalOverIndexing()){
-	  //	  errs() << "GEP Initializer: " << *CE << "\n";
+	if (CE != nullptr && CE->isGEPWithNoNotionalOverIndexing())
 	  continue;
-	}
       }
       //      errs() << "mutable global: " << *globalW->getValue() << "\n";
       InstructionWrapper::nonConstantGlobalList.insert(globalW);
@@ -523,10 +550,8 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   //process a module function by function
   for(Module::iterator F = M.begin(), E = M.end(); F != E; ++F)
     {
-      if((*F).isDeclaration()){
-	errs() << (*F).getName() << " is defined outside!" << "\n";
+      if((*F).isDeclaration())
 	continue;
-      }
       
       if((*F).getName() == "crypto_hashblocks_sha512"){
 	errs() << "crypto_hashblocks_sha512 is too tricky to be processed, bypass for simplicity!\n";
@@ -534,10 +559,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       }
 
       funcs++;//label this author-defined function
-
       errs() << "PDG " << 1.0*funcs/M.getFunctionList().size()*100 << "% completed\n";
-
-      //      InstructionWrapper::constructInstMap(*F);
 
       //find all Load/Store instructions for each F, insert to F's storeInstList and loadInstList
       for(inst_iterator I = inst_begin(F), IE = inst_end(F); I != IE; ++I){
@@ -546,18 +568,17 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	  StoreInst* SI = dyn_cast<StoreInst>(pInstruction);
 	  FunctionWrapper::funcMap[&*F]->getStoreInstList().push_back(SI);
 	  FunctionWrapper::funcMap[&*F]->getPtrSet().insert(SI->getPointerOperand());
-	  if(SI->getValueOperand()->getType()->isPointerTy()){
+	  if(SI->getValueOperand()->getType()->isPointerTy())
 	    FunctionWrapper::funcMap[&*F]->getPtrSet().insert(SI->getValueOperand());
-	  }
 	} 
 	if(isa<LoadInst>(pInstruction)){
 	  LoadInst* LI = dyn_cast<LoadInst>(pInstruction);
 	  FunctionWrapper::funcMap[&*F]->getLoadInstList().push_back(LI);
 	  FunctionWrapper::funcMap[&*F]->getPtrSet().insert(LI->getPointerOperand());
 	}
-	if(isa<ReturnInst>(pInstruction)){
+	if(isa<ReturnInst>(pInstruction))
 	  FunctionWrapper::funcMap[&*F]->getReturnInstList().push_back(pInstruction);
-	}	
+		
 	if(isa<CallInst>(pInstruction))
 	  FunctionWrapper::funcMap[&*F]->getCallInstList().push_back(dyn_cast<CallInst>(pInstruction));		  	      
 	if(isa<AllocaInst>(pInstruction)){
@@ -569,9 +590,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       //print PtrSet only
 
       DataDependencyGraph &ddgGraph = getAnalysis<DataDependencyGraph>(*F);
-     
       ControlDependencyGraph &cdgGraph = getAnalysis<ControlDependencyGraph>(*F);
-  
       cdgGraph.computeDependencies(*F, cdgGraph.PDT);
 
       //set Entries for Function, set up links between dummy entry nodes and their func*
@@ -598,7 +617,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	  Instruction *pInstruction = InstW->getInstruction();
 
 	  //process call nodes, one call node will only be touched once(!InstW->getAccess)
-	  if(pInstruction != nullptr && InstW->getType() == INST && isa<CallInst>(pInstruction) && !InstW->getAccess())
+	  if (pInstruction != nullptr && InstW->getType() == INST && isa<CallInst>(pInstruction) && !InstW->getAccess())
 	    {
 	      InstructionWrapper *CallInstW = InstW;
 	      CallInst *CI = dyn_cast<CallInst>(pInstruction);
@@ -607,7 +626,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      //if this is an indirect function invocation(function pointer, member function...)
 	      // e.g.   %1 = load i32 (i32)** %p, align 8
 	      //	%call = call i32 %1(i32 2))
-	      if(callee == nullptr){
+	      if (callee == nullptr){
 		Type* t = CI->getCalledValue()->getType();
 		errs() << "indirect call, called Type t = " << *t << "\n";
 
@@ -618,18 +637,17 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      }
 
 	      //TODO: isIntrinsic or not? Consider intrinsics as common instructions for now, continue directly  
-	      if(callee->isIntrinsic() || callee->isDeclaration()){
-
+	      if (callee->isIntrinsic() || callee->isDeclaration()){
 		//if it is a var_annotation, save the sensitive value by the way
-		if(callee->getIntrinsicID() == Intrinsic::var_annotation){
+		if (callee->getIntrinsicID() == Intrinsic::var_annotation){
 		  Value* v = CI->getArgOperand(0);
 		  errs() << "Intrinsic var_annotation: " << *v << "\n";
 
-		  if(isa<BitCastInst>(v)){
+		  if (isa<BitCastInst>(v)){
 		    Instruction *tempI = dyn_cast<Instruction>(v);
 		    errs() << "******** BitInst opcode: " << *tempI << "BitCast \n";
 
-		    for(llvm::Use &U : tempI->operands()){
+		    for (llvm::Use &U : tempI->operands()){
 		      Value *v_for_cast = U.get();
 		      sensitive_values.push_back(v_for_cast);
 		      //		      inst_src_dict[v_for_cast] = tempI->getDebugLoc().getLine();
@@ -668,17 +686,21 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      map<Value*, Value*> ParamArgMap;
 	      for(int i = 0; i < argNum; i++){
 		Value* argi = CI->getArgOperand(i);
-		//	errs() << *argi << "\n";
+		string tyName = getTypeName(argi);
+		  if (tyName.find("sshkey") != string::npos){
+                      errs() << "potential leak CI : " << *CI << "\n";
+  //                   errs() << "sshkey found: ty: " << tyName << "val : " << *argi << "\n";
+                      errs() << callee->getName() << " --> " << InstW->getFunction()->getName() << "\n";
+                  }
+		
+
+
 		if (isa<GlobalVariable>(argi)){
-		  //		  errs() << "The "<< i << "th arg is global\n";
-		  //	  errs() << "function uses this global: " << InstW->getFunction()->getName() << "\n";
 		  globalTaintedFuncMap[argi].insert(InstW->getFunction());	
-		  
 		  // go to callee function body
 		  int j = 0;
 		  for(Function::arg_iterator ai = CI->getCalledFunction()->arg_begin(); ai != CI->getCalledFunction()->arg_end(); ++ai){
 		    if(j == i){
-		      //		      errs() << "*argi:" << *argi << " | *ai: " << *ai << "\n";
 		      ParamArgMap[ai] = argi;
 		    }
 		    j++;
@@ -688,12 +710,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      //	      errs() << "ParamArgMap size: " << ParamArgMap.size() << "\n";
 	      if (!ParamArgMap.empty())
 		FindGlobalsInCalleeFunction(CI->getCalledFunction(), ParamArgMap, globalTaintedFuncMap);
-
-
 	      // for CallInst we need to handle the arglist specially, to deal with related globals
-	      
-
-
 	    }//end callnode
 	  if(pInstruction != nullptr)
 	    FindGlobalsInReadAndWrite(InstW, globalTaintedFuncMap);
@@ -716,7 +733,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 		}		
 	      }// end searching globalList
 	    }//end processing load for global
-
 
 	    if (InstW2->getType() == INST && isa<StoreInst>(InstW2->getInstruction())){
 	      StoreInst* SI2 = dyn_cast<StoreInst>(InstW2->getInstruction());
@@ -743,9 +759,8 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      }
 	    
 	      if(nullptr != InstW2->getInstruction()){		  
-		if (cdgGraph.CDG->depends(InstW, InstW2)) {
+		if (cdgGraph.CDG->depends(InstW, InstW2)) 
 		  PDG->addDependency(InstW, InstW2, CONTROL);
-		}
 	      }
 	    }//end if(InstW->getType()== INST)
 
@@ -801,24 +816,63 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
     }// end for (int i ...
   }//end if (global_annos)
 
+
+  set<string> leakFuncNames;
+  // telnet
   /*
-  for (auto &gf : globalTaintedFuncMap){
-        errs() << "gf: " << *(gf.first) << " tainted funcs: " << (gf.second).size() << "\n";
-    for (auto &F : gf.second){
-      errs() << " " << F->getName() << "\n";
-    }
-  }
+  leakFuncNames.insert("ring_supplied");
+  leakFuncNames.insert("ring_empty_count");
+  leakFuncNames.insert("willoption");
+  leakFuncNames.insert("dooption");
+  leakFuncNames.insert("telrcv");
+  leakFuncNames.insert("printoption");
   */
 
+  // wget
+  leakFuncNames.insert("sockaddr_set_data");
+  leakFuncNames.insert("connect_to_ip");
+  leakFuncNames.insert("ftp_expected_bytes");
+  leakFuncNames.insert("print_length");
+  leakFuncNames.insert("getftp");
+  leakFuncNames.insert("ftp_response");
+  leakFuncNames.insert("ftp_greeting");
+  leakFuncNames.insert("ftp_login");
+  leakFuncNames.insert("ftp_pasv");
+  leakFuncNames.insert("ftp_type");
+  leakFuncNames.insert("ftp_retr");
+  leakFuncNames.insert("ftp_syst");
+  leakFuncNames.insert("ftp_pwd");
+  leakFuncNames.insert("ftp_size");
+  leakFuncNames.insert("saved_append_1");
+  leakFuncNames.insert("saved_append");
+  leakFuncNames.insert("progress_create");
+  leakFuncNames.insert("bar_create");
+  leakFuncNames.insert("bar_update");
+  leakFuncNames.insert("bar_finish");
+  leakFuncNames.insert("count_cols");
+  leakFuncNames.insert("create_image");
+  leakFuncNames.insert("fd_read_body");
+  leakFuncNames.insert("human_readable");
+  leakFuncNames.insert("number_to_string");
+  leakFuncNames.insert("number_to_static_string");
 
 
-  errs() << "DEBUG shen \n";
 
   //process all sensitive instructions in functions and all global values, color their corresponding nodes in set "nodes"   
   for(std::set<InstructionWrapper*>::iterator nodeIt = InstructionWrapper::nodes.begin();
       nodeIt != InstructionWrapper::nodes.end(); ++nodeIt){
     InstructionWrapper *InstW = *nodeIt;
     Instruction *pInstruction = InstW->getInstruction();
+
+    // put F's ReturnInst into sentitive nodes, if F is in leakFuncNames(Implicit)
+    if (pInstruction != nullptr && isa<ReturnInst>(pInstruction)){
+      string func = InstW->getFunction()->getName();
+      if (leakFuncNames.find(func) != leakFuncNames.end()){
+	errs() << "leak func: " << func << " ReturnInst: " << *pInstruction << "\n";
+	sensitive_nodes.push_back(InstW);
+      }
+    }
+
     //process annoatated sensitive values(actually are instructionWrappers) in functions
     for(int i = 0; i < sensitive_values.size(); i++){
       if(sensitive_values[i] == pInstruction)
@@ -833,6 +887,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       }//end judging gv's sensitivity
     }//end global value
   }
+ 
   /*
     for(auto const &I : sensitive_nodes){
     errs() << "SENSITIVE NODE: " <<*I->getInstruction()<< "\n" ;    
@@ -881,10 +936,12 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	if(true != adjacent_InstW->getFlag()){
 
 	  // CALL -> ENTRY
-	  //	  errs() << "DEBUG 2\n";
+	  // CALL Inst -> adjacent_InstW
 	  if (InstW->getType() == CALL && adjacent_InstW->getType() == ENTRY){
 	    errs() << "Parameter Leak : " << InstW->getFunction()->getName() << " --> " << adjacent_InstW->getFunction()->getName() << "\n\n"; 
 	    edgesWithParamLeak.push_back(make_pair(InstW->getFunction()->getName(), adjacent_InstW->getFunction()->getName()));
+	    
+
 	  }
 	  if (visitedF.find(adjacent_InstW->getFunction()) == visitedF.end()){
 	    errs() << "New Func colored: " << adjacent_InstW->getFunction()->getName() << " ";
@@ -963,7 +1020,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       errs() << " " << F->getName() << "\n";
     }
   }
-
   
   ofstream outfile;
   //  outfile.open("./thttpd/global_func_map_thttpd.txt");
@@ -993,7 +1049,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       outfile << F->getName().str() << "\n";
   }
   outfile.close();
-
 
   // print all used global variables(interacted with functions) to a file
 

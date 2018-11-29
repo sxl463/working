@@ -170,7 +170,7 @@ int evaluateStructTy(Type* STy){
     errs() << "evaluateSturctTy, STy is nullptr!\n";
     exit(1);
   }
-  //  errs() << "STy: " << *STy << "------------------\n";
+  errs() << "STy: " << *STy << "------------------\n";
   if (typeCache.find(STy) != typeCache.end()){
     //   errs() << "STy is in typeCache, typeCache.size: " << typeCache.size() << "\n";
     return typeCache[STy];
@@ -181,17 +181,17 @@ int evaluateStructTy(Type* STy){
     int elem = 0;
     Type* ty = STy->getStructElementType(i);
     
-    // errs() << i << " ElemTy: " << *ty << "\n";
+    errs() << i << " ElemTy: " << *ty << "\n";
     if (ty->isPointerTy()){
       Type* pteTy = ty->getContainedType(0);
-      // errs() << "pteTy: " << *pteTy << " ------ ";
+      errs() << "pteTy: " << *pteTy << " ------ ";
       // check the pointee type, if struct, check existedTypes
       // if existed, stop and return 1, otherwise, evaluate it
       if (pteTy->isStructTy()){
 	if (recursiveTypes.find(pteTy) != recursiveTypes.end())
 	  elem = 1;
 	else{
-	  //  errs() << "not in recursiveTypes\n";
+	  errs() << "not in recursiveTypes\n";
 	  elem = evaluateStructTy(pteTy);	  
 	}
       }
@@ -200,20 +200,24 @@ int evaluateStructTy(Type* STy){
       // only for multiple level pointers with no struct in the middle
       else if (pteTy->isPointerTy()){
 	while (pteTy->isPointerTy()){
+	  errs() << "pteTy = " << *pteTy << "\n";
+	  errs() << "elem++\n";
 	  elem++;
 	  pteTy = pteTy->getContainedType(0);
 	}
+	errs() << "after while elem = : " << elem << "\n";
       }
-      else elem = 0; // default
+      // why i8* always 0? check ty first...
+      else elem++; // default, e.g.: ty:i8* pteTy: i8, elem++ = 1...
     }
     else if (ty->isStructTy()){
-      // errs() << " (case 2: structTy) ";
+      errs() << " (case 2: structTy) ";
       elem = evaluateStructTy(ty);
     }
     else
       elem = 0;
 
-    //    errs() << "elem = " << elem << "\n";
+    errs() << "elem = " << elem << "\n";
     max = (max >= elem) ? max : elem;
   }
 
@@ -267,6 +271,43 @@ int getComplexity(Type* ty){
   return 0; // default plus one
 }
 
+
+int getGlobalTypeComplexity(Type* ty){
+  if (ty == nullptr) return 0;
+
+  if(ty->isStructTy()){
+    errs() << "g StructTy: " << *ty << "\n";
+    errs() << "StructTyMap[ty]: " << StructTyMap[ty] << "\n"; 
+    return StructTyMap[ty];
+  }
+  // take care of recursive types. e.g. linked list
+  if (ty->isPointerTy()){
+    // if i8* (char*)
+    //    if (isInt8PointerTy(ty->getContainedType(0)))
+    //  return 1;
+    errs() << "g isPointerTy: " << *ty << "\n";
+    if (ty->getContainedType(0)->isFunctionTy()){
+      //   errs() << "FunctionTy found\n";
+      // errs() << *ty->getContainedType(0) << "\n";
+      return 1;
+    }
+    return 1 + getGlobalTypeComplexity(ty->getContainedType(0));
+  }
+
+  // TODO: is 1 OK for FunctionTy?
+  if (ty->isFunctionTy()){
+    // errs() << "ty is FunctionTy: " << *ty << "\n";
+    return 1;
+  }
+  // we consider array as a pointer, so plus 1
+  if (ty->isArrayTy())
+    return 1 + getComplexity(ty->getArrayElementType());
+  
+  return 0; // default plus one
+}
+
+
+
 float computeEdgeComplexity(Function* F){
   int ret = 0; 
   if (F->getReturnType()->isVoidTy() && F->getArgumentList().empty())
@@ -281,7 +322,7 @@ float computeEdgeComplexity(Function* F){
       errs() << "A.getType: " << A.getType() << "\n";
     int arg_complexity = getComplexity(A.getType());
     //  errs() << "arg : " << *A.getType() << " " << arg_complexity << "\n";
-    ret += arg_complexity; 
+    ret = (ret > arg_complexity) ? ret : arg_complexity; 
   }
   return ret;
 }
@@ -576,21 +617,22 @@ struct GetCallGraph : public ModulePass {
 
     errs() << "=========== Start to generate profiling data...=============\n";
 
+#if 0
     readSSHClientFuncsFromFile(ssh_client_only_set, "./ssh/ssh-only-client-functions.txt");
     errs() << "ssh_client_only_set.size: " << ssh_client_only_set.size() << "\n";
 
     readSSHClientGlobalsFromFile(ssh_client_global_set, "./ssh/global_in_ssh_client.txt");
     errs() << "global_in_ssh_client.size: " << ssh_client_global_set.size() << "\n";
-
+#endif
 
 #if 1
     int fid = 0;
     ofstream func_id_file;
 
-    //          func_id_file.open("./thttpd/thttpd_func_id_map.txt");
-    func_id_file.open("./ssh/ssh_func_id_map.txt");
-    //    func_id_file.open("./wget/wget_func_id_map.txt");
-    //    func_id_file.open("./telnet/telnet_func_id_map.txt");
+    //    func_id_file.open("./thttpd/thttpd_func_id_map.txt");
+    //    func_id_file.open("./ssh/ssh_func_id_map.txt");
+        func_id_file.open("./wget/wget_func_id_map.txt");
+    //        func_id_file.open("./telnet/telnet_func_id_map.txt");
 
 
     set<CallPair> testS;
@@ -632,6 +674,8 @@ struct GetCallGraph : public ModulePass {
 	    //e.g. %call = call i32 (i32, ...)* bitcast (i32 (i32)* @f to i32 (i32, ...)*)(i32 5), !dbg !30
 	    if (callee == nullptr) {
 	      errs() << "CALLEE==NULLPTR: " << *CI << "\n";
+// disable handling indirect call with bitcasts 
+#if 0
 	      Type* ty = CI->getCalledValue()->getType();
 	      FunctionType* fty = cast<FunctionType>(cast<PointerType>(ty)->getElementType());
 
@@ -652,6 +696,7 @@ struct GetCallGraph : public ModulePass {
 		  insertToCallGraph(&F, FP, CG);
 		}
 	      }
+#endif
 	      continue;
 	    }
 	    if (callee->isDeclaration() || callee->isIntrinsic()) continue;
@@ -665,19 +710,17 @@ struct GetCallGraph : public ModulePass {
 
 	    // for call edges between two functions
 	    insertToCallGraph(&F, CI->getCalledFunction(), CG);
-	  }
-	  	  
+	  }	  	  
 	}
       }// end for (BasicBlock...)
     }//end for F : M...
 
     // process call edges between global variables and functions 
     int gid = fid+1;
-    
+
     errs() << "Now we are processing call edges between global variables and functions:\n";
     errs() << "globalTaintedFuncMap.size: " << PDG->globalTaintedFuncMap.size() << "\n";
     errs() << "gid: " << gid << "\n";
-
     for (auto & GF : PDG->globalTaintedFuncMap){
       string Str;
       raw_string_ostream OS(Str);
@@ -692,6 +735,7 @@ struct GetCallGraph : public ModulePass {
       // For @auth_check2.prevcryp, we only get auth_check2 for checking...
       first = strnew.find("$"); 
       last = strnew.find(".") - 1;
+
       // we can find an LLVM global like @auth_check2.prevcryp
       if (last != string::npos){
 	string mayFunc = strnew.substr(first+1, last-first);
@@ -704,17 +748,15 @@ struct GetCallGraph : public ModulePass {
       
       FidSize *pfs = new FidSize(strnew, gid, -1);
       fidSizeSetForGlobals.insert(pfs);
-
       globalDict[strnew] = gid;
       globalNameSet.insert(strnew);
       gid++;
-      //     errs() << strnew << " gid: " << gid << "\n"; 
 
+    // static call relationship between functions and global variables
+#if 0    
       for (auto &F : GF.second){
 	// CallEdge: src dest call_times type_complexity
-	int type_complexity = getComplexity(GF.first->getType());
-	//	errs() << "Global: " << strnew << "\n"; 
-	//	errs() << "Global type complexity: " << type_complexity << "\n";
+	int type_complexity = getGlobalTypeComplexity(GF.first->getType());
 	CallEdge gce(strnew, F->getName().str(), 0, type_complexity);
 	CallEdge cge(F->getName().str(), strnew, 0, type_complexity);
 
@@ -725,11 +767,8 @@ struct GetCallGraph : public ModulePass {
 	    break;
 	  }
 	}
-	if (!gceInCG){
-	  //	  errs() << "\n gce CALL EDGE <" <<gce.caller << " --> " << gce.callee<< "  complexity: " << gce.type_complexity << "\n"; 
-	  //  errs() << "globale type: " << *GF.first->getType() << "\n";
+	if (!gceInCG)
 	  CG.push_back(gce);
-	} 
 
 	bool cgeInCG = false;
 	for (const auto& E : CG){
@@ -739,23 +778,24 @@ struct GetCallGraph : public ModulePass {
 	  }
 	}
 	if (!cgeInCG){
-	  errs() << "\n cge CALL EDGE <" <<cge.caller << " --> " << cge.callee<< "  complexity: " << cge.type_complexity << "\n"; 
+	  cge.type_complexity = getGlobalTypeComplexity(GF.first->getType());
+	  errs() << "\n cge CALL EDGE <" <<cge.caller << " --> " << cge.callee<< "  new complexity: " << cge.type_complexity << "\n"; 
 	  errs() << "globale type: " << *GF.first->getType() << "\n";
 	  CG.push_back(cge);
 	} 
       }
+#endif     
     }// end auto & GF : PDG->globalTaintedFuncMap
-      
+ 
     func_id_file.close();
 
     errs() << "call graph size: " << CG.size() << "\n";
     errs() << "non redundant call edges: " << testS.size() << "\n";
 
-    //        readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout.txt");
-    readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.pin.txt");
-    //    readCallTimesFromPin(callPairsFromPin, "./wget/wget.pin.output");
-    //    readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.output");
-
+    //       readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pinout.txt");
+    // readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.pin.txt");
+        readCallTimesFromPin(callPairsFromPin, "./wget/wget.pin.txt");
+    //    readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.txt");
 
     errs() << "globalNameSet.size: " << globalNameSet.size() << "\n";
     errs() << "funcNameSet.size: " << funcNameSet.size() << "\n";
@@ -779,7 +819,7 @@ struct GetCallGraph : public ModulePass {
 	temp++;
 
 	if (!isPinInCG(CP.caller, CP.callee, CG)){
-	  errs() << "pin_callgraph_WARNING: " << CP.caller << " " << CP.callee << "\n";
+	  //	  errs() << "pin_callgraph_WARNING: " << CP.caller << " " << CP.callee << "\n";
 	  // add missing call edge between two functions (caused by indirect calls)
 	  if (CP.caller[0] != '$' && CP.callee[0] != '$'){
 	    Function* caller;
@@ -821,7 +861,7 @@ struct GetCallGraph : public ModulePass {
 		}
 		if (!cgeInCG)
 		  CG.push_back(cge);
-		errs() << "cge_Warning_fixed: " << CP.caller << " " << CP.callee << "\n";
+		//		errs() << "cge_Warning_fixed: " << CP.caller << " " << CP.callee << "\n";
 		break;
 	      }
 	    }// end auto & GF : PDG->globalTaintedFuncMap
@@ -862,7 +902,6 @@ struct GetCallGraph : public ModulePass {
       }	
     }
     errs() << "real callpairs: " << temp << "\n";
-
     errs() << "global_func_set.txt closed\n";
     errs() << "callPairsFromPin.size: " << callPairsFromPin.size() << "\n";
     errs() << "CG.size: " << CG.size() << "\n";
@@ -873,8 +912,7 @@ struct GetCallGraph : public ModulePass {
     // add call times on edges
     for (const auto& P : callPairsFromPin){
       count++;
-      //      errs() << "count: " << count << "\n";
-      
+      //      errs() << "count: " << count << "\n";      
       if(count > 1000){
 	count = 0;
 	range += 1000;
@@ -892,11 +930,10 @@ struct GetCallGraph : public ModulePass {
       }
     }
 
-    //        string sourceFunc = "auth_check2";
-    string sourceFunc = "sshkey_parse_private2";
-    //    string sourceFunc = "fd_read_body";
-    //string sourceFunc = "process_rings";
-
+    //      string sourceFunc = "auth_check2";
+    //    string sourceFunc = "sshkey_parse_private2";
+        string sourceFunc = "sock_read";
+    // string sourceFunc = "process_rings";
 
     errs() << "invoked funcs: " << invokedF.size() << "\b";
     errs() << "sensitive func: " << funcDict[sourceFunc] << "\n";
@@ -906,25 +943,24 @@ struct GetCallGraph : public ModulePass {
 
     findEdgesWithLeak(CG, PDG->edgesWithParamLeak, PDG->edgesWithReturnLeak);
 
-    //       printCallGraphToFile(CG, "./thttpd/thttpd.callgraph");
-    printCallGraphToFile(CG, "./ssh/ssh.callgraph", invokedF.size(), 4, 
-			 funcDict[sourceFunc], funcDict["main"]);
-    //       printCallGraphToFile(CG, "./wget/wget.callgraph");
-    //       printCallGraphToFile(CG, "./telnet/telnet.callgraph");
+    //    printCallGraphToFile(CG, "./thttpd/thttpd.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
+    // printCallGraphToFile(CG, "./ssh/ssh.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
+        printCallGraphToFile(CG, "./wget/wget.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
+    //    printCallGraphToFile(CG, "./telnet/telnet.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
 
     errs() << "CallPairsFromPin: " << callPairsFromPin.size() << "\n";
 
 
 
-    //    printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./thttpd_id_code_size.txt");
-    printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./ssh_id_code_size.txt");
-    //       printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./wget/wget_id_code_size.txt");
-    //   printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./telnet/telnet_id_code_size.txt");
+    //   printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./thttpd_id_code_size.txt");
+    //    printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./ssh_id_code_size.txt");
+           printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./wget/wget_id_code_size.txt");
+	   //   printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./telnet/telnet_id_code_size.txt");
 
-    // only for ssh
-    printSSHFuncLabelsToFile(fidSizeSet, fidSizeSetForGlobals, ssh_client_only_set, 
-			     ssh_client_global_set, "./ssh/ssh_in_libssa_or_not.txt");
-
+    // TODO: only for ssh, use SSH macro later
+#if 0
+        printSSHFuncLabelsToFile(fidSizeSet, fidSizeSetForGlobals, ssh_client_only_set, ssh_client_global_set, "./ssh/ssh_in_libssa_or_not.txt");
+#endif
 
     fidSizeSet.clear();
     callPairsFromPin.clear();

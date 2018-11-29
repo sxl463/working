@@ -420,87 +420,85 @@ control_client_sighandler
 mux_client_request_session
 mux_client_request_stdio_fwd
 control_client_sigrelay
-71 $mux_master_handlers 1
-mux_master_read_cb
-72 $received_window_change_signal 3
+71 $received_window_change_signal 3
 window_change_handler
 client_check_window_change
 client_suspend_self
-73 $channel_pre 4
+72 $channel_pre 4
 channel_handler_init_13
 channel_handler_init
 channel_handler_init_15
 channel_handler_init_20
-74 $channel_post 4
+73 $channel_post 4
 channel_handler_init_13
 channel_handler_init
 channel_handler_init_15
 channel_handler_init_20
-75 $IPv4or6 5
+74 $IPv4or6 5
 channel_set_af
 x11_create_display_inet
 x11_connect_display
 connect_to
 channel_setup_fwd_listener_tcpip
-76 $all_opens_permitted 4
+75 $all_opens_permitted 4
 channel_connect_to_port
 channel_permit_all_opens
 channel_add_permitted_opens
 channel_connect_to_path
-77 $permitted_adm_opens 6
+76 $permitted_adm_opens 6
 channel_connect_to_port
 channel_add_adm_permitted_opens
 channel_disable_adm_local_opens
 channel_clear_adm_permitted_opens
 channel_print_adm_permitted_opens
 channel_connect_to_path
-78 $num_adm_permitted_opens 6
+77 $num_adm_permitted_opens 6
 channel_connect_to_port
 channel_add_adm_permitted_opens
 channel_disable_adm_local_opens
 channel_clear_adm_permitted_opens
 channel_print_adm_permitted_opens
 channel_connect_to_path
-79 $x11_saved_display 1
+78 $x11_saved_display 1
 x11_request_forwarding_with_spoofing
-80 $x11_saved_proto 2
-x11_request_forwarding_with_spoofing
-x11_open_helper
-81 $x11_saved_data 2
+79 $x11_saved_proto 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-82 $x11_saved_data_len 2
+80 $x11_saved_data 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-83 $x11_fake_data 2
+81 $x11_saved_data_len 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-84 $x11_fake_data_len 2
+82 $x11_fake_data 2
 x11_request_forwarding_with_spoofing
 x11_open_helper
-85 $channel_handler.did_init 1
+83 $x11_fake_data_len 2
+x11_request_forwarding_with_spoofing
+x11_open_helper
+84 $channel_handler.did_init 1
 channel_handler
-86 $session_id2 3
+85 $session_id2 3
 ssh_kex2
 userauth_hostbased
 sign_and_send_pubkey
-87 $session_id2_len 3
+86 $session_id2_len 3
 ssh_kex2
 userauth_hostbased
 sign_and_send_pubkey
-88 $xxx_host 2
+87 $xxx_host 2
 ssh_kex2
 verify_host_key_callback
-89 $xxx_hostaddr 2
+88 $xxx_hostaddr 2
 ssh_kex2
 verify_host_key_callback
-90 $userauth_passwd.attempt 1
+89 $userauth_passwd.attempt 1
 userauth_passwd
-91 $userauth_kbdint.attempt 1
+90 $userauth_kbdint.attempt 1
 userauth_kbdint
-92 $ssh_packet_disconnect.disconnecting 1
+91 $ssh_packet_disconnect.disconnecting 1
 ssh_packet_disconnect
-93 $active_state 82
+92 $active_state 82
 channel_free
 channel_not_very_much_buffered_data
 channel_send_open
@@ -583,54 +581,47 @@ packet_disconnect
 packet_send_debug
 tty_make_modes
 dispatch_protocol_error
-94 $saved_euid 2
+93 $saved_euid 2
 temporarily_use_uid
 restore_uid
-95 $saved_egid 2
+94 $saved_egid 2
 temporarily_use_uid
 restore_uid
-96 $privileged 2
+95 $privileged 2
 temporarily_use_uid
 restore_uid
-97 $temporarily_use_uid_effective 3
+96 $temporarily_use_uid_effective 3
 temporarily_use_uid
 restore_uid
 permanently_set_uid
-98 $saved_egroupslen 2
+97 $saved_egroupslen 2
 temporarily_use_uid
 restore_uid
-99 $saved_egroups 2
+98 $saved_egroups 2
 temporarily_use_uid
 restore_uid
-100 $user_groupslen 1
+99 $user_groupslen 1
 temporarily_use_uid
-101 $user_groups 1
+100 $user_groups 1
 temporarily_use_uid
-102 $monotime.gettime_failed 1
+101 $monotime.gettime_failed 1
 monotime
-103 $monotime_double.gettime_failed 1
+102 $monotime_double.gettime_failed 1
 monotime_double
-104 $errset_text 1
+103 $errset_text 1
 dns_result_totext
-105 $pkcs11_interactive 2
+104 $pkcs11_interactive 2
 pkcs11_init
 pkcs11_rsa_private_encrypt
-106 $pkcs11_providers 5
+105 $pkcs11_providers 5
 pkcs11_init
 pkcs11_terminate
 pkcs11_del_provider
 pkcs11_add_provider
 pkcs11_provider_lookup
-107 $digests 2
-ssh_digest_alg_by_name
-ssh_digest_by_alg
-108 $iv 1
-crypto_hash_sha512
-109 $proposal_names 1
+106 $proposal_names 1
 kex_buf2prop
-110 $sshbuf_dtob16.hex 1
-sshbuf_dtob16
-111 $channels_alloc 19
+107 $channels_alloc 19
 channel_by_id
 channel_by_remote_id
 channel_new
@@ -650,7 +641,7 @@ channel_cancel_rport_listener_streamlocal
 channel_cancel_rport_listener_tcpip
 channel_cancel_lport_listener_streamlocal
 channel_cancel_lport_listener_tcpip
-112 $channels 19
+108 $channels 19
 channel_by_id
 channel_by_remote_id
 channel_new
@@ -670,12 +661,12 @@ channel_cancel_rport_listener_streamlocal
 channel_cancel_rport_listener_tcpip
 channel_cancel_lport_listener_streamlocal
 channel_cancel_lport_listener_tcpip
-113 $channel_max_fd 4
+109 $channel_max_fd 4
 channel_close_fd
 channel_prepare_select
 channel_register_fds
 channel_post_connecting
-114 $num_permitted_opens 13
+110 $num_permitted_opens 13
 channel_free
 channel_proxy_downstream
 channel_connect_to_port
@@ -689,7 +680,7 @@ channel_connect_by_listen_path
 channel_connect_to_path
 channel_request_rforward_cancel_streamlocal
 channel_request_rforward_cancel_tcpip
-115 $permitted_opens 12
+111 $permitted_opens 12
 channel_free
 channel_proxy_downstream
 channel_connect_to_port
@@ -702,10 +693,10 @@ channel_connect_by_listen_path
 channel_connect_to_path
 channel_request_rforward_cancel_streamlocal
 channel_request_rforward_cancel_tcpip
-116 $x11_refuse_time1454 2
+112 $x11_refuse_time1454 2
 channel_set_x11_refuse_time
 x11_open_helper
-117 $compat13 9
+113 $compat13 9
 channel_still_open
 channel_find_open
 channel_output_poll
@@ -715,7 +706,7 @@ channel_handle_rfd
 channel_handler_init
 channel_handle_wfd
 enable_compat13
-118 $compat20 55
+114 $compat20 55
 channel_still_open
 channel_output_poll
 channel_input_data
@@ -771,7 +762,7 @@ ssh_packet_set_state
 tty_make_modes
 tty_parse_modes
 dispatch_protocol_error
-119 $datafellows 28
+115 $datafellows 28
 channel_input_extended_data
 channel_input_open_failure
 channel_update_permitted_opens
@@ -800,57 +791,48 @@ chan_send_eow2
 key_sign
 key_verify
 kexgex_client
-120 $argv0 3
+116 $argv0 3
 do_log
 log_init
 log_change_level
-121 $log_level 2
+117 $log_level 2
 do_log
 log_init
-122 $log_handler 3
-do_log
-log_init
-set_log_handler
-123 $log_handler_ctx 3
+118 $log_handler 3
 do_log
 log_init
 set_log_handler
-124 $log_on_stderr 4
+119 $log_handler_ctx 3
+do_log
+log_init
+set_log_handler
+120 $log_on_stderr 4
 do_log
 log_init
 log_change_level
 log_is_on_stderr
-125 $log_facility 3
+121 $log_facility 3
 do_log
 log_init
 log_change_level
-126 $log_stderr_fd 3
+122 $log_stderr_fd 3
 do_log
 log_is_on_stderr
 log_redirect_stderr_to
-127 $ostates 1
+123 $ostates 1
 chan_set_ostate
-128 $istates 1
+124 $istates 1
 chan_set_istate
-129 $crc32tab 1
-ssh_crc32
-130 $m 2
-barrett_reduce
-reduce_add_sub
-131 $mu 1
-barrett_reduce
-132 $crypto_sign_ed25519_ref_ge25519_base 2
+125 $crypto_sign_ed25519_ref_ge25519_base 2
 crypto_sign_ed25519_ref_double_scalarmult_vartime
 crypto_sign_ed25519_open
-133 $ge25519_ecd 2
+126 $ge25519_ecd 2
 crypto_sign_ed25519_ref_unpackneg_vartime
 crypto_sign_ed25519_ref_fe25519_mul
-134 $ge25519_sqrtm1 2
+127 $ge25519_sqrtm1 2
 crypto_sign_ed25519_ref_unpackneg_vartime
 crypto_sign_ed25519_ref_fe25519_mul
-135 $ge25519_ec2d 3
+128 $ge25519_ec2d 3
 add_p1p1
 ge25519_mixadd2
 crypto_sign_ed25519_ref_fe25519_mul
-136 $ge25519_base_multiples_affine 1
-choose_t
