@@ -17,7 +17,7 @@
 // #define SECRET_FILE_SIZE 1675
 
 // wget integrity story
-#define SECRET_FILE_SIZE 0
+#define SECRET_FILE_SIZE 1675
 
 
 #endif

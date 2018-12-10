@@ -59,6 +59,9 @@ namespace cot {
     set<FunctionWrapper*> insFuncs;
     vector<pair<string, string> > edgesWithParamLeak;
     vector<pair<string, string> > edgesWithReturnLeak;
+    // e.g. Key* load_identity_file (...), there should be an big leak number on the return edge 
+    vector<pair<string, string> > edgesWithPotentialLeakFromArgs; 
+    vector<pair<string, string> > edgesWithPotentialLeakFromRet;
     map<Value*, set<Function*> > globalTaintedFuncMap;
 
     ProgramDependencyGraph() : llvm::ModulePass(ID){

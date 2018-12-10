@@ -93,7 +93,8 @@ std::vector<InstructionWrapper*> sensitive_nodes;
 std::vector<pair<string, string> > edgesWithParamLeak;
 std::vector<pair<string, string> > edgesWithReturnLeak;
 // e.g. Key* load_identity_file (...), there should be an big leak number on the return edge 
-std::vector<pair<string, string> > edgesWithPotentialLeak; 
+std::vector<pair<string, string> > edgesWithPotentialLeakFromArgs; 
+std::vector<pair<string, string> > edgesWithPotentialLeakFromRet;
 
 void ProgramDependencyGraph::connectAllPossibleFunctions(InstructionWrapper* CInstW, FunctionType* funcTy){
 
@@ -471,15 +472,27 @@ void ProgramDependencyGraph::FindGlobalsInCalleeFunction(Function* F,
   return;
 }
 
-string getTypeName(Value* val){
-  if (val == nullptr){
+string getTypeName(Type* ty){
+  if (ty == nullptr){
     errs() << "getTypeName null ptr input!\n";
     exit(1);
   }
-  Type *ty = val->getType();
   string type_str;
   raw_string_ostream rso(type_str);
   rso << *ty;
+
+  /*
+  string temp_type_str = rso.str();
+  if (temp_type_str.find("struct.identity") != string::npos){
+    errs() << "temp_type_str: " << temp_type_str << "\n";
+    errs() << "in ty: " << *ty << "\n";
+  }
+
+  if (temp_type_str.find("struct.sshkey") != string::npos){
+    errs() << "temp_type_str_2: " << temp_type_str << "\n";
+    errs() << "in ty2: " << *ty << "\n";
+  }
+  */
   return rso.str();
 }
 
@@ -660,46 +673,43 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      }
 
 	      //TODO: tail call processing
-	      if(CI->isTailCall()){continue;}
+	      if(CI->isTailCall())
+		continue;
 	      
 	      //special cases done, common function
 	      CallWrapper *callW = new CallWrapper(CI);
 	      CallWrapper::callMap[CI] = callW;
-
-	      if(callee->getName() == "auth_check"){
-		errs() << *CI << "\n";
-	      }
-	      if(callee->getName() == "auth_check2"){
-		errs() << *CI << "\n";
-	      }
 	     
 	      //take recursive callInst as common callInst
-	      if(0 == connectCallerAndCallee(InstW, callee)){
+	      if(0 == connectCallerAndCallee(InstW, callee))
 		InstW->setAccess(true);
-	      }
-
-	      // common callee function, see if there is global variable in the CallInst's arg list
-
-	      //	      errs() << "callinst: " << *CI << "\n";
-	      int argNum = CI->getNumArgOperands();
 	      
+	      // check retval, if has sshkey, add potential leak from callee -> caller
+	      string retTyName = getTypeName(callee->getFunctionType()->getReturnType());
+	      if (retTyName.find("sshkey") != string::npos){
+		errs() << "Ret has potential leak : " << *CI << "\n";
+		errs() << callee->getName() << " --> " << InstW->getFunction()->getName() << "\n";
+		edgesWithPotentialLeakFromRet.push_back(make_pair(callee->getName(), InstW->getFunction()->getName()));
+	      }
+	      
+	      // common callee function, see if there is global variable in the CallInst's arg list
+	      int argNum = CI->getNumArgOperands();	      
 	      map<Value*, Value*> ParamArgMap;
 	      for(int i = 0; i < argNum; i++){
 		Value* argi = CI->getArgOperand(i);
-		string tyName = getTypeName(argi);
+		string tyName = getTypeName(argi->getType());
+		// this arg has a sshkey type member, add potential leak <caller -> callee>
 		  if (tyName.find("sshkey") != string::npos){
                       errs() << "potential leak CI : " << *CI << "\n";
-  //                   errs() << "sshkey found: ty: " << tyName << "val : " << *argi << "\n";
-                      errs() << callee->getName() << " --> " << InstW->getFunction()->getName() << "\n";
+                      errs() << InstW->getFunction()->getName() << " --> " << callee->getName() << "\n";
+		      edgesWithPotentialLeakFromArgs.push_back(make_pair(InstW->getFunction()->getName(), callee->getName()));
                   }
-		
-
-
 		if (isa<GlobalVariable>(argi)){
 		  globalTaintedFuncMap[argi].insert(InstW->getFunction());	
 		  // go to callee function body
 		  int j = 0;
-		  for(Function::arg_iterator ai = CI->getCalledFunction()->arg_begin(); ai != CI->getCalledFunction()->arg_end(); ++ai){
+		  for(Function::arg_iterator ai = CI->getCalledFunction()->arg_begin(); 
+		      ai != CI->getCalledFunction()->arg_end(); ++ai){
 		    if(j == i){
 		      ParamArgMap[ai] = argi;
 		    }
@@ -719,12 +729,9 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	  for(std::set<InstructionWrapper*>::iterator nodeIt2 = InstructionWrapper::funcInstWList[&*F].begin();
 	      nodeIt2 != InstructionWrapper::funcInstWList[&*F].end(); ++nodeIt2){
 	    InstructionWrapper *InstW2 = *nodeIt2;
-  
 	    //process all non constant globals see whether dependency exists
 	    if(InstW2->getType() == INST && isa<LoadInst>(InstW2->getInstruction())){
-
 	      LoadInst* LI2 = dyn_cast<LoadInst>(InstW2->getInstruction());
-	      
 	      for(std::set<InstructionWrapper *>::const_iterator gi = InstructionWrapper::nonConstantGlobalList.begin(); 
 		  gi != InstructionWrapper::nonConstantGlobalList.end(); ++gi){	   
 		if(LI2->getPointerOperand() == (*gi)->getValue()){
@@ -795,7 +802,6 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
     auto casted_array = cast<ConstantArray>(global_annos->getOperand(0));
     for (int i = 0; i < casted_array->getNumOperands(); i++) {
       auto casted_struct = cast<ConstantStruct>(casted_array->getOperand(i));
-
       if (auto sen_gv = dyn_cast<GlobalValue>(casted_struct->getOperand(0)->getOperand(0))) {
 	auto anno = cast<ConstantDataArray>(cast<GlobalVariable>(casted_struct->getOperand(1)->getOperand(0))->getOperand(0))->getAsCString();
 	if (anno == "sensitive") { 
@@ -829,6 +835,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   */
 
   // wget
+  
   leakFuncNames.insert("sockaddr_set_data");
   leakFuncNames.insert("connect_to_ip");
   leakFuncNames.insert("ftp_expected_bytes");
@@ -855,7 +862,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   leakFuncNames.insert("human_readable");
   leakFuncNames.insert("number_to_string");
   leakFuncNames.insert("number_to_static_string");
-
+  
 
 
   //process all sensitive instructions in functions and all global values, color their corresponding nodes in set "nodes"   
@@ -938,10 +945,14 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	  // CALL -> ENTRY
 	  // CALL Inst -> adjacent_InstW
 	  if (InstW->getType() == CALL && adjacent_InstW->getType() == ENTRY){
-	    errs() << "Parameter Leak : " << InstW->getFunction()->getName() << " --> " << adjacent_InstW->getFunction()->getName() << "\n\n"; 
-	    edgesWithParamLeak.push_back(make_pair(InstW->getFunction()->getName(), adjacent_InstW->getFunction()->getName()));
-	    
-
+	    CallInst* CI = dyn_cast<CallInst>(InstW->getInstruction());
+	    // must have args
+	    int argNum = CI->getNumArgOperands();	     
+	    if (argNum > 0){
+	      errs() << "Parameter Leak(must have parameters!) : " << InstW->getFunction()->getName() 
+		     << " --> " << adjacent_InstW->getFunction()->getName() << "\n\n"; 
+	      edgesWithParamLeak.push_back(make_pair(InstW->getFunction()->getName(), adjacent_InstW->getFunction()->getName()));
+	    }
 	  }
 	  if (visitedF.find(adjacent_InstW->getFunction()) == visitedF.end()){
 	    errs() << "New Func colored: " << adjacent_InstW->getFunction()->getName() << " ";
