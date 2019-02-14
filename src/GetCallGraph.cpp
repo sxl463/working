@@ -42,6 +42,9 @@
 #define WGET_EXTRA_OPERATION 1
 #define SSH_EXTRA_OPERATION 0
 
+#define REAL_TIME 0.05
+
+
 using namespace std;
 using namespace llvm;
 
@@ -417,19 +420,19 @@ void printCallGraphToFile(vector<CallEdge>& CG, string filename,
     // global -> func
     if(E.caller[0] == '$'){
       outfile << globalDict[E.caller] << " " << funcDict[E.callee] << " " 
-	      << E.call_times << " " << E.type_complexity << " "
+	      << E.call_times/REAL_TIME << " " << E.type_complexity << " "
 	      << E.param_leak << "/" << E.return_leak << "\n";
     }
     // func -> global
     else if (E.callee[0] == '$'){
       outfile << funcDict[E.caller] << " " << globalDict[E.callee] << " " 
-	      << E.call_times << " " << E.type_complexity << " "
+	      << E.call_times/REAL_TIME << " " << E.type_complexity << " "
 	      << E.param_leak << "/" << E.return_leak << "\n";
     }
     // func -> func
     else{
       outfile << funcDict[E.caller] << " " << funcDict[E.callee] << " " 
-	      << E.call_times << " " << E.type_complexity << " "
+	      << E.call_times/REAL_TIME << " " << E.type_complexity << " "
 	      << E.param_leak << "/" << E.return_leak << "\n";
     }
   }
@@ -553,6 +556,72 @@ void insertToCallGraph(Function* caller, Function* callee, vector<CallEdge>& CG)
   } 
 }
 
+typedef struct{
+  string func_id_map_filename;
+  string pin_filename;
+  string source_funcname;
+  string callgraph_filename;
+  string id_code_size_filename;
+}ProgramConfig;
+
+enum{
+  THTTPD,
+  SSH,
+  WGET,
+  TELNET
+};
+
+
+void input_output_filename_init(string program_name, ProgramConfig& pconfig){
+
+  if (program_name.empty()){
+    errs() << "Empty program name input!\n";
+    exit(1);
+  }
+  // example: "./wget/wget_func_id_map.txt"
+  pconfig.func_id_map_filename = "./" + program_name + "/" + program_name + "_func_id_map.txt";
+
+  // example: "./wget/wget.pin.txt"  
+  pconfig.pin_filename = "./" + program_name + "/" + program_name + ".pin.txt";
+
+  int prog = -1;
+  if (program_name == "thttpd")
+    prog = THTTPD;
+  if (program_name == "ssh")
+    prog = SSH;
+  if (program_name == "wget")
+    prog = WGET;
+  if (program_name == "telnet")
+    prog = TELNET;
+
+
+  switch(prog)
+    {
+    case THTTPD:
+      pconfig.source_funcname = "auth_check2";
+      break;
+    case SSH:
+      pconfig.source_funcname = "sshkey_parse_private2";
+      break;
+    case WGET:
+      pconfig.source_funcname = "sock_read";
+      break;
+    case TELNET:
+      pconfig.source_funcname = "process_rings";
+      break;
+    default:
+      ;
+    }  
+  
+  // example: "./wget/wget.callgraph"
+  pconfig.callgraph_filename = "./" + program_name + "/" + program_name + ".callgraph";
+
+  // example: ./wget/wget_id_code_size.txt
+  pconfig.id_code_size_filename = "./" + program_name + "/" + program_name + "_id_code_size.txt";
+
+}
+
+
 struct GetCallGraph : public ModulePass {
   static char ID;
   GetCallGraph() : ModulePass(ID) {}
@@ -564,6 +633,17 @@ struct GetCallGraph : public ModulePass {
   }
 
   bool runOnModule(Module &M) {
+
+    ProgramConfig pconfig;
+    string program_name = "wget";
+
+    input_output_filename_init(program_name, pconfig);
+
+    errs() << "func_id_map_file   : " << pconfig.func_id_map_filename << "\n";
+    errs() << "pin_filename       : " << pconfig.pin_filename << "\n";
+    errs() << "source_funcname    : " << pconfig.source_funcname << "\n";
+    errs() << "callgraph_file     : " << pconfig.callgraph_filename << "\n";
+    errs() << "id_code_size_file  : " << pconfig.id_code_size_filename << "\n";
 
     ProgramDependencyGraph *PDG = &getAnalysis<ProgramDependencyGraph>();
     errs() << "PDG->getPassName: " << PDG->getPassName() << "\n";
@@ -649,6 +729,7 @@ struct GetCallGraph : public ModulePass {
     }    
     errs() << "=========== Start to generate profiling data...=============\n";
 
+
 #if SSH_EXTRA_OPERATION
     readSSHClientFuncsFromFile(ssh_client_only_set, "./ssh/ssh-only-client-functions.txt");
     errs() << "ssh_client_only_set.size: " << ssh_client_only_set.size() << "\n";
@@ -661,11 +742,12 @@ struct GetCallGraph : public ModulePass {
     int fid = 0;
     ofstream func_id_file;
 
-    //    func_id_file.open("./thttpd/thttpd_func_id_map.txt");
-    //    func_id_file.open("./ssh/ssh_func_id_map.txt");
-       func_id_file.open("./wget/wget_func_id_map.txt");
+    // func_id_file.open("./thttpd/thttpd_func_id_map.txt");
+    // func_id_file.open("./ssh/ssh_func_id_map.txt");
+    // func_id_file.open("./wget/wget_func_id_map.txt");
     // func_id_file.open("./telnet/telnet_func_id_map.txt");
 
+    func_id_file.open(pconfig.func_id_map_filename);
 
     set<CallPair> testS;
     set<Function*> funcSet;
@@ -695,8 +777,6 @@ struct GetCallGraph : public ModulePass {
       FidSize *pfs = new FidSize(F.getName(), fid, NumInsts);
       fidSizeSet.insert(pfs);
       fid++;
-
-      //      errs() << "fid: " << fid << "\n"; 
 
       for(BasicBlock &B : F){
 	for(Instruction &I : B){
@@ -824,11 +904,12 @@ struct GetCallGraph : public ModulePass {
     errs() << "call graph size: " << CG.size() << "\n";
     errs() << "non redundant call edges: " << testS.size() << "\n";
 
-    //       readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pin.txt");
+    // readCallTimesFromPin(callPairsFromPin, "./thttpd/thttpd.pin.txt");
     // readCallTimesFromPin(callPairsFromPin, "./ssh/ssh.pin.txt");
-    //    readCallTimesFromPin(callPairsFromPin, "./wget/wget.pin.txt");
-    readCallTimesFromPin(callPairsFromPin, "./wget/wget.ftp.succeed"); // temp
-    //    readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.txt");
+    // readCallTimesFromPin(callPairsFromPin, "./wget/wget.pin.txt");
+    // readCallTimesFromPin(callPairsFromPin, "./telnet/telnet.pin.txt");
+
+    readCallTimesFromPin(callPairsFromPin, pconfig.pin_filename);
 
     errs() << "globalNameSet.size: " << globalNameSet.size() << "\n";
     errs() << "funcNameSet.size: " << funcNameSet.size() << "\n";
@@ -837,12 +918,14 @@ struct GetCallGraph : public ModulePass {
     global_func_set.insert(globalNameSet.begin(), globalNameSet.end());
     global_func_set.insert(funcNameSet.begin(), funcNameSet.end());
 
+    /*
     ofstream tempout;
     tempout.open("./global_func_set.txt");
     for(auto const &gf : global_func_set){
       tempout << gf << "\n";
     }
     tempout.close();
+    */
        
     int temp = 0;
 
@@ -945,7 +1028,6 @@ struct GetCallGraph : public ModulePass {
     // add call times on edges
     for (const auto& P : callPairsFromPin){
       count++;
-      //      errs() << "count: " << count << "\n";      
       if(count > 1000){
 	count = 0;
 	range += 1000;
@@ -963,35 +1045,34 @@ struct GetCallGraph : public ModulePass {
       }
     }
 
-    //      string sourceFunc = "auth_check2";
-    //    string sourceFunc = "sshkey_parse_private2";
-        string sourceFunc = "sock_read";
-    //     string sourceFunc = "process_rings";
+    // string sourceFunc = "auth_check2";
+    // string sourceFunc = "sshkey_parse_private2";
+    // string sourceFunc = "sock_read";
+    // string sourceFunc = "process_rings";
 
     errs() << "invoked funcs: " << invokedF.size() << "\b";
-    errs() << "sensitive func: " << funcDict[sourceFunc] << "\n";
+    errs() << "sensitive func: " << funcDict[pconfig.source_funcname] << "\n";
     errs() << "main func: " << funcDict["main"] << "\n";
 
     findEdgesWithLeak(CG, PDG->edgesWithParamLeak, PDG->edgesWithReturnLeak);
 
+    // findEdgesWithPotentialLeak (CG, PDG->edgesWithPotentialLeakFromArgs, PDG->edgesWithPotentialLeakFromRet);
 
-    //    findEdgesWithPotentialLeak (CG, PDG->edgesWithPotentialLeakFromArgs, PDG->edgesWithPotentialLeakFromRet);
-
-
-    //    printCallGraphToFile(CG, "./thttpd/thttpd.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
+    // printCallGraphToFile(CG, "./thttpd/thttpd.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
     // printCallGraphToFile(CG, "./ssh/ssh.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
-    //    printCallGraphToFile(CG, "./wget/wget.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
-    printCallGraphToFile(CG, "./wget/wget.callgraph.ftp", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
-    //    printCallGraphToFile(CG, "./telnet/telnet.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
+    // printCallGraphToFile(CG, "./wget/wget.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
+    // printCallGraphToFile(CG, "./telnet/telnet.callgraph", invokedF.size(), 4, funcDict[sourceFunc], funcDict["main"]);
+
+    printCallGraphToFile(CG, pconfig.callgraph_filename, invokedF.size(), 4, funcDict[pconfig.source_funcname], funcDict["main"]);
 
     errs() << "CallPairsFromPin: " << callPairsFromPin.size() << "\n";
 
+    // printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./thttpd_id_code_size.txt");
+    // printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./ssh/ssh_id_code_size.txt");
+    // printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./wget/wget_id_code_size.txt");
+    // printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./telnet/telnet_id_code_size.txt");
 
-
-    //   printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./thttpd_id_code_size.txt");
-    //    printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./ssh/ssh_id_code_size.txt");
-           printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./wget/wget_id_code_size.txt");
-    //      printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, "./telnet/telnet_id_code_size.txt");
+    printFidSizeSetToFile(fidSizeSet, fidSizeSetForGlobals, pconfig.id_code_size_filename);
 
     // TODO: only for ssh, use SSH macro later
 #if SSH_EXTRA_OPERATION
