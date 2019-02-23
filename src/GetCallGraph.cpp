@@ -39,10 +39,10 @@
 
 #define THTTPD_EXTRA_OPERATION 0 
 #define TELNET_EXTRA_OPERATION 0 
-#define WGET_EXTRA_OPERATION 1
+#define WGET_EXTRA_OPERATION 0
 #define SSH_EXTRA_OPERATION 0
 
-#define REAL_TIME 0.05
+#define REAL_TIME 0.013
 
 
 using namespace std;
@@ -568,7 +568,11 @@ enum{
   THTTPD,
   SSH,
   WGET,
-  TELNET
+  TELNET,
+  CHSH,
+  CHAGE,
+  PASSWD,
+  USERADD
 };
 
 
@@ -594,6 +598,17 @@ void input_output_filename_init(string program_name, ProgramConfig& pconfig){
   if (program_name == "telnet")
     prog = TELNET;
 
+  if (program_name == "chsh")
+    prog = CHSH;
+
+  if (program_name == "chage")
+    prog = CHAGE;
+
+  if (program_name == "passwd")
+    prog = PASSWD;
+
+  if (program_name == "useradd")
+    prog = USERADD;
 
   switch(prog)
     {
@@ -609,6 +624,21 @@ void input_output_filename_init(string program_name, ProgramConfig& pconfig){
     case TELNET:
       pconfig.source_funcname = "process_rings";
       break;
+    case CHSH:
+      pconfig.source_funcname = "update_shell";
+      break;
+    case CHAGE:
+      pconfig.source_funcname = "get_defaults";
+      break;
+
+    case PASSWD:
+      pconfig.source_funcname = "new_password";
+      break;
+
+    case USERADD:
+      pconfig.source_funcname = "open_files";
+      break;
+
     default:
       ;
     }  
@@ -635,7 +665,7 @@ struct GetCallGraph : public ModulePass {
   bool runOnModule(Module &M) {
 
     ProgramConfig pconfig;
-    string program_name = "wget";
+    string program_name = "useradd";
 
     input_output_filename_init(program_name, pconfig);
 

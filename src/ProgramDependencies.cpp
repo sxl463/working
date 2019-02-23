@@ -835,7 +835,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   */
 
   // wget
-  
+  /* 
   leakFuncNames.insert("sockaddr_set_data");
   leakFuncNames.insert("connect_to_ip");
   leakFuncNames.insert("ftp_expected_bytes");
@@ -862,7 +862,11 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   leakFuncNames.insert("human_readable");
   leakFuncNames.insert("number_to_string");
   leakFuncNames.insert("number_to_static_string");
-  
+  */
+
+  errs() << "chage sensitive functions added!\n";
+  leakFuncNames.insert("get_defaults");
+  leakFuncNames.insert("update_age");
 
 
   //process all sensitive instructions in functions and all global values, color their corresponding nodes in set "nodes"   
