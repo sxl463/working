@@ -1,472 +1,469 @@
-0 $hostname 4
+0 $hostname 3
+status
+tn
+netflush
+1 $new_tc 3
+TerminalSpecialChars
+process_rings
+telsnd
+2 $stderr 12
+slccmd
+toggle
+unsetcmd
+setcmd
+sendcmd
+modecmd
+send_tncmd
+env_send
+env_cmd
+SetNetTrace
+SetForExit
+ExitString
+3 $line 3
+command
+cmdrc
+tn
+4 $stdin 5
+command
+setescape
+tn
+init_sys
+TerminalWindowSize
+5 $margc 4
+command
+makeargv
+cmdrc
+tn
+6 $margv 2
+command
+cmdrc
+7 $start 2
+status
 main
-parse_args
-lookup_hostname
-read_config
-1 $port 4
+8 $end 1
+status
+9 $cpu_time_used 1
+status
+10 $binmode 1
+togbinary
+11 $rcname 1
+cmdrc
+12 $envlisthead 3
+env_define
+env_list
+env_find
+13 $environ 1
+env_init
+14 $env_default.nep 1
+env_default
+15 $stdout 11
+status
+togcrmod
+setescape
+init_network
+init_sys
+TerminalFlushOutput
+SetNetTrace
+Dump
+printoption
+printsub
+SetForExit
+16 $netoring 41
+sendcmd
+send_esc
+env_opt_end
+init_network
+setneturg
+netflush
+ring_init
+ring_mark
+ring_at_mark
+ring_clear_mark
+ring_supplied
+ring_consumed
+ring_empty_count
+ring_full_count
+ring_full_consecutive
+ring_supply_data
+send_do
+send_dont
+send_will
+send_wont
+lm_will
+lm_do
+lm_mode
+slc_import
+slc_end_reply
+sendnaws
+Scheduler
+xmitAO
+xmitEL
+xmitEC
+dosynch
+get_status
+intp
+sendbrk
+sendabort
+sendsusp
+sendeof
+sendayt
+suboption
+telsnd
+doflush
+17 $netiring 12
+init_network
+ring_init
+ring_supplied
+ring_consumed
+ring_empty_count
+ring_empty_consecutive
+ring_full_count
+ring_full_consecutive
+process_rings
+telrcv
+Scheduler
+SetForExit
+18 $ring_clock 2
+ring_supplied
+ring_consumed
+19 $old_tc 1
+TerminalNewMode
+20 $tout 5
+init_sys
+TerminalWrite
+TerminalNewMode
+process_rings
+EmptyTerminal
+21 $tin 4
+init_sys
+TerminalRead
+TerminalNewMode
+process_rings
+22 $TerminalNewMode.prevmode 1
+TerminalNewMode
+23 $net 7
+bye
+togdebug
+tn
+stilloob
+netflush
+sys_telnet_init
+process_rings
+24 $local 2
+rlogin_susp
+telsnd
+25 $bol 2
+rlogin_susp
+telsnd
+26 $telnetport 2
+tn
+telnet
+27 $want_status_response 2
+get_status
+printsub
+28 $autosynch 4
+intp
+sendbrk
+sendabort
+sendsusp
+29 $showoptions 2
+printoption
+printsub
+30 $netdata 2
+netflush
+process_rings
+31 $crlf 3
+togcrlf
+TerminalNewMode
+telsnd
+32 $donelclchars 1
+lclchars
+33 $dontlecho 2
+telsnd
+getconnmode
+34 $globalmode 4
+TerminalSpecialChars
+TerminalNewMode
+process_rings
+telsnd
+35 $ttyoring 11
+ring_init
+ring_supplied
+ring_consumed
+ring_empty_count
+ring_full_count
+ring_full_consecutive
+telrcv
+Scheduler
+init_terminal
+ttyflush
+EmptyTerminal
+36 $ttyiring 11
+ring_init
+ring_supplied
+ring_consumed
+ring_empty_count
+ring_empty_consecutive
+ring_full_count
+ring_full_consecutive
+process_rings
+Scheduler
+telsnd
+init_terminal
+37 $termdata 2
+process_rings
+ttyflush
+38 $termAytChar 2
+TerminalSaveState
+TerminalDefaultChars
+39 $telcmds 3
+printoption
+optionstatus
+printsub
+40 $telopts 3
+printoption
+optionstatus
+printsub
+41 $slc_names 1
+printsub
+42 $NetTrace 5
+init_network
+SetNetTrace
+Dump
+printoption
+printsub
+43 $NetTraceFile 1
+SetNetTrace
+44 $prettydump 1
+Dump
+45 $control.buf 1
+control
+46 $family 2
 main
-parse_args
-lookup_hostname
-read_config
-2 $cgi_pattern 3
+parse_opt
+47 $user 2
 main
-parse_args
-read_config
-3 $cgi_limit 3
+parse_opt
+48 $argp_program_bug_address 1
 main
-parse_args
-read_config
-4 $charset 3
+49 $options 24
+dolmmode
+status
+togxbinary
+togrbinary
+togbinary
+env_send
+TerminalSpecialChars
+send_do
+send_dont
+send_will
+send_wont
+willoption
+wontoption
+slc_mode_export
+slc_mode_import
+telrcv
+sendnaws
+Scheduler
+get_status
+dooption
+dontoption
+suboption
+telsnd
+getconnmode
+50 $do_dont_resp 4
+send_do
+send_dont
+willoption
+wontoption
+51 $will_wont_resp 4
+send_will
+send_wont
+dooption
+dontoption
+52 $eight 2
+parse_opt
+telnet
+53 $autologin 3
+tn
 main
-parse_args
-read_config
-5 $p3p 3
+parse_opt
+54 $skiprc 2
+cmdrc
+parse_opt
+55 $debug 3
+togdebug
+tn
+parse_opt
+56 $autoflush 6
+xmitAO
+intp
+sendbrk
+sendabort
+sendsusp
+init_terminal
+57 $prompt 2
+command
 main
-parse_args
-read_config
-6 $max_age 3
+58 $kludgelinemode 11
+status
+dokludgemode
+dolinemode
+docharmode
+TerminalSpecialChars
+intr2
+wontoption
+Scheduler
+dooption
+telsnd
+getconnmode
+59 $subpointer 3
+init_telnet
+telrcv
+suboption
+60 $donebinarytoggle 4
+togxbinary
+togrbinary
+togbinary
+init_telnet
+61 $localflow 4
+init_telnet
+telrcv
+suboption
+getconnmode
+62 $ISend 2
+init_telnet
+Scheduler
+63 $In3270 3
+setescape
+init_telnet
+getconnmode
+64 $connected 12
+command
+bye
+cmdrc
+status
+sendcmd
+modecmd
+send_tncmd
+suspend
+shell
+tn
+sendwin
+init_telnet
+65 $restartany 3
+TerminalNewMode
+init_telnet
+suboption
+66 $SYNCHing 5
+TerminalNewMode
+process_rings
+init_telnet
+telrcv
+Scheduler
+67 $escape 8
+status
+send_esc
+set_escape_char
+setescape
+parse_opt
+TerminalNewMode
+init_telnet
+telsnd
+68 $rlogin 8
+command
+set_escape_char
 main
-parse_args
-read_config
-7 $max_connects 5
-main
-idle
-update_throttles
-shut_down
-handle_newconnect
-8 $stderr 8
-main
-lookup_hostname
-read_throttlefile
-no_value_required
-e_strdup
-usage
-read_config
-value_required
-9 $user 3
-main
-parse_args
-read_config
-10 $numthrottles 4
-main
-read_throttlefile
-update_throttles
-check_throttles
-11 $maxthrottles 2
-main
-read_throttlefile
-12 $throttles 8
-main
-read_throttlefile
-update_throttles
-shut_down
-handle_read
-handle_send
-clear_throttles
-check_throttles
-13 $throttlefile 3
-main
-parse_args
-read_config
-14 $logfile 4
-main
-parse_args
-re_open_logfile
-read_config
-15 $argv0 8
-main
-lookup_hostname
-read_throttlefile
-no_value_required
-e_strdup
-usage
-read_config
-value_required
-16 $terminate 1
-main
-17 $stats_time 2
-main
-logstats
-18 $start_time 2
-main
-logstats
-19 $stats_connections 3
-main
-handle_newconnect
-thttpd_logstats
-20 $stats_bytes 3
-main
-thttpd_logstats
-really_clear_connection
-21 $stats_simultaneous 3
-main
-handle_newconnect
-thttpd_logstats
-22 $connects 6
-main
-idle
-update_throttles
-shut_down
-handle_newconnect
-really_clear_connection
-23 $first_free_connect 3
-main
-handle_newconnect
-really_clear_connection
-24 $num_connects 4
-main
-handle_usr1
-handle_newconnect
-really_clear_connection
-25 $httpd_conn_count 4
-main
-shut_down
-handle_newconnect
-thttpd_logstats
-26 $count 1
-main
-27 $got_hup 2
-main
-handle_hup
-28 $got_usr1 2
-main
-handle_usr1
-29 $watchdog_flag 3
-main
-handle_alrm
-occasional
-30 $no_symlink_check 3
-main
-parse_args
-read_config
-31 $do_vhost 3
-main
-parse_args
-read_config
-32 $do_global_passwd 3
-main
-parse_args
-read_config
-33 $url_pattern 3
-main
-parse_args
-read_config
-34 $local_pattern 3
-main
-parse_args
-read_config
-35 $no_empty_referrers 3
-main
-parse_args
-read_config
-36 $hs 5
-main
-handle_chld
-shut_down
-re_open_logfile
-handle_newconnect
-37 $no_log 3
-main
-parse_args
-re_open_logfile
-38 $stdout 1
-main
-39 $do_chroot 3
-main
-parse_args
-read_config
-40 $data_dir 3
-main
-parse_args
-read_config
-41 $dir 3
-main
-parse_args
-read_config
-42 $debug 3
-main
-parse_args
-read_config
-43 $stdin 1
-main
-44 $pidfile 3
-main
-parse_args
-read_config
-45 $sub_process 5
-cgi
-cgi_child
-post_post_garbage_hack
-ls
-httpd_write_response
-46 $str_alloc_count 2
-httpd_logstats
-httpd_realloc_str
-47 $str_alloc_size 2
-httpd_logstats
-httpd_realloc_str
-48 $really_start_request.indexname 2
-really_start_request
-httpd_realloc_str
-49 $really_start_request.maxindexname 2
-really_start_request
-httpd_realloc_str
-50 $really_start_request.index_names 1
-really_start_request
-51 $really_start_request.dirname 2
-really_start_request
-httpd_realloc_str
-52 $really_start_request.maxdirname 2
-really_start_request
-httpd_realloc_str
-53 $enc_tab 2
-init_mime
-figure_mime
-54 $typ_tab 2
-init_mime
-figure_mime
-55 $httpd_initialize.ghnbuf 1
-httpd_initialize
-56 $httpd_ntoa.str 1
-httpd_ntoa
-57 $expand_symlinks.checked 2
-expand_symlinks
-httpd_realloc_str
-58 $expand_symlinks.rest 2
-expand_symlinks
-httpd_realloc_str
-59 $expand_symlinks.maxchecked 2
-expand_symlinks
-httpd_realloc_str
-60 $expand_symlinks.maxrest 2
-expand_symlinks
-httpd_realloc_str
-61 $vhost_map.tempfilename 2
-vhost_map
-httpd_realloc_str
-62 $vhost_map.maxtempfilename 2
-vhost_map
-httpd_realloc_str
-63 $nfiles 9
-fdwatch_get_nfiles
-fdwatch_add_fd
-fdwatch_del_fd
-fdwatch_check_fd
-fdwatch_get_next_client_data
-poll_add_fd
-poll_del_fd
-poll_check_fd
-poll_get_fd
-64 $nwatches 3
-fdwatch_get_nfiles
-fdwatch
-fdwatch_logstats
-65 $fd_rw 5
-fdwatch_get_nfiles
-fdwatch_add_fd
-fdwatch_del_fd
-fdwatch_check_fd
-poll_check_fd
-66 $fd_data 4
-fdwatch_get_nfiles
-fdwatch_add_fd
-fdwatch_del_fd
-fdwatch_get_next_client_data
-67 $nreturned 2
-fdwatch
-fdwatch_get_next_client_data
-68 $next_ridx 2
-fdwatch
-fdwatch_get_next_client_data
-69 $poll_rfdidx 3
-poll_init
-poll_watch
-poll_get_fd
-70 $poll_fdidx 4
-poll_init
-poll_add_fd
-poll_del_fd
-poll_check_fd
-71 $pollfds 5
-poll_init
-poll_add_fd
-poll_del_fd
-poll_watch
-poll_check_fd
-72 $npoll_fds 3
-poll_add_fd
-poll_del_fd
-poll_watch
-73 $free_maps 4
-mmc_map
-mmc_cleanup
-mmc_term
-really_unmap
-74 $free_count 5
-mmc_map
-mmc_cleanup
-mmc_term
-mmc_logstats
-really_unmap
-75 $alloc_count 4
-mmc_map
-mmc_cleanup
-mmc_term
-mmc_logstats
-76 $maps 5
-mmc_map
-mmc_unmap
-mmc_term
-check_hash_size
-really_unmap
-77 $map_count 5
-mmc_map
-mmc_cleanup
-mmc_logstats
-check_hash_size
-really_unmap
-78 $mapped_bytes 4
-mmc_map
-mmc_cleanup
-mmc_logstats
-really_unmap
-79 $expire_age 2
-mmc_cleanup
-mmc_logstats
-80 $hash_size 4
-mmc_logstats
-check_hash_size
-find_hash
-add_hash
-81 $hash_mask 4
-check_hash_size
-find_hash
-add_hash
-hash
-82 $hash_table 4
-check_hash_size
-find_hash
-add_hash
-really_unmap
-83 $timers 6
-tmr_term
-l_add
-tmr_init
-tmr_mstimeout
-tmr_run
-l_remove
-84 $free_timers 4
-tmr_init
-tmr_create
-tmr_cancel
-tmr_cleanup
-85 $free_count597 5
-tmr_logstats
-tmr_init
-tmr_create
-tmr_cancel
-tmr_cleanup
-86 $active_count 4
-tmr_logstats
-tmr_init
-tmr_create
-tmr_cancel
-87 $alloc_count598 4
-tmr_logstats
-tmr_init
-tmr_create
-tmr_cleanup
-88 $tmr_timeout.timeout 1
-tmr_timeout
-89 $JunkClientData 1
-main
-90 $tm_to_time.monthtab 1
-tm_to_time
-91 $make_envp.envp 1
-make_envp
-92 $build_env.buf 2
-build_env
-httpd_realloc_str
-93 $build_env.maxbuf 2
-build_env
-httpd_realloc_str
-94 $ls.maxnames 1
-ls
-95 $ls.names 1
-ls
-96 $ls.nameptrs 1
-ls
-97 $ls.name 2
-ls
-httpd_realloc_str
-98 $ls.maxname 2
-ls
-httpd_realloc_str
-99 $ls.rname 2
-ls
-httpd_realloc_str
-100 $ls.maxrname 2
-ls
-httpd_realloc_str
-101 $ls.encrname 2
-ls
-httpd_realloc_str
-102 $ls.maxencrname 2
-ls
-httpd_realloc_str
-103 $really_check_referrer.refhost 2
-really_check_referrer
-httpd_realloc_str
-104 $really_check_referrer.refhost_size 2
-really_check_referrer
-httpd_realloc_str
-105 $auth_check2.authpath 2
-auth_check2
-httpd_realloc_str
-106 $auth_check2.maxauthpath 2
-auth_check2
-httpd_realloc_str
-107 $auth_check2.prevauthpath 2
-auth_check2
-httpd_realloc_str
-108 $auth_check2.maxprevauthpath 2
-auth_check2
-httpd_realloc_str
-109 $auth_check2.prevmtime 1
-auth_check2
-110 $auth_check2.prevuser 2
-auth_check2
-httpd_realloc_str
-111 $auth_check2.maxprevuser 2
-auth_check2
-httpd_realloc_str
-112 $auth_check2.prevcryp 2
-auth_check2
-httpd_realloc_str
-113 $auth_check2.maxprevcryp 2
-auth_check2
-httpd_realloc_str
-114 $b64_decode_table 1
-b64_decode
-115 $send_authenticate.header 2
-send_authenticate
-httpd_realloc_str
-116 $send_authenticate.maxheader 2
-send_authenticate
-httpd_realloc_str
-117 $send_dirredirect.location 2
-send_dirredirect
-httpd_realloc_str
-118 $send_dirredirect.header 2
-send_dirredirect
-httpd_realloc_str
-119 $send_dirredirect.maxlocation 2
-send_dirredirect
-httpd_realloc_str
-120 $send_dirredirect.maxheader 2
-send_dirredirect
-httpd_realloc_str
-121 $scan_wday.sorted 1
-scan_wday
-122 $scan_mon.sorted 1
-scan_mon
+parse_opt
+TerminalNewMode
+susp
+init_telnet
+telsnd
+69 $echoc 2
+init_telnet
+telsnd
+70 $flushline 9
+init_telnet
+telrcv
+Scheduler
+intp
+sendbrk
+sendabort
+sendsusp
+telsnd
+doflush
+71 $telrcv_state 2
+init_telnet
+telrcv
+72 $clocks 5
+willoption
+wontoption
+telrcv
+telsnd
+getconnmode
+73 $flushout 6
+TerminalNewMode
+process_rings
+willoption
+wontoption
+telrcv
+doflush
+74 $unknown 2
+mklist
+gettermname
+75 $termbuf 1
+init_term
+76 $resettermname 2
+bye
+gettermname
+77 $gettermname.tnamep 1
+gettermname
+78 $gettermname.next 1
+gettermname
+79 $str_lm 2
+lm_will
+lm_do
+80 $linemode 4
+dolmmode
+lm_mode
+dontoption
+getconnmode
+81 $str_lm_mode 1
+lm_mode
+82 $localchars 6
+status
+TerminalNewMode
+susp
+intr
+intr2
+slc_init
+83 $spc_data 1
+slc
+84 $slc_mode 4
+slc_init
+slcstate
+slc_mode_export
+slc_mode_import
+85 $slc_replyp 3
+slc_start_reply
+slc_add_reply
+slc_end_reply
+86 $opt_reply 3
+env_opt_start
+env_opt_add
+env_opt_end
+87 $opt_replyend 3
+env_opt_start
+env_opt_add
+env_opt_end
+88 $opt_replyp 4
+env_opt_start
+env_opt_add
+env_opt_end
+env_opt_start_info
+89 $crmod 2
+togcrmod
+telrcv
+90 $subend 2
+telrcv
+suboption

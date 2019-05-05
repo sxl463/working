@@ -502,6 +502,19 @@ void readSystemCallTableFromFile(set<string>& S, string filename){
     S.insert(line);  
 }
 
+std::set<string> senFuncSet;
+void readSensitiveFuncsFromFile(set<string>& S, string filename){
+  ifstream infile(filename);
+  string line;
+ 
+  if (!infile.is_open()){
+    errs() << "Fail to read CallSite, file can't be opened!\n ";
+    exit(0);
+  }
+
+  while(infile >> line)
+    S.insert(line);  
+}
 
 
 
@@ -516,14 +529,19 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 #if COUNT_INDIRECT_AND_SYS_CALL
   int indirect_call_count = 0;
   int system_call_count = 0;
+  int sensitive_indirect_call_count = 0;
+  int sensitive_system_call_count = 0;	
   ofstream indirect_call_file;
   ofstream system_call_file;
   indirect_call_file.open("indirect_calls.txt");
   system_call_file.open("system_calls.txt");
 
-
   readSystemCallTableFromFile(systemcallSet, "linux_syscall_table.txt");
   errs() << "systemcallSet size:" << systemcallSet.size() << "\n";
+
+  readSensitiveFuncsFromFile(senFuncSet, "sensitive_functions.txt");
+  errs() << "senFuncSet size:" << senFuncSet.size() << "\n";
+
 #endif
 
   // Type preprocessing
@@ -663,10 +681,17 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      //	%call = call i32 %1(i32 2))
 	      if (callee == nullptr){
 		Type* t = CI->getCalledValue()->getType();
-		errs() << "indirect call:" << " " << indirect_call_count << " " << *t << "\n";
-
 
 #if COUNT_INDIRECT_AND_SYS_CALL
+		errs() << "indirect call:" << " " << indirect_call_count << " " << *t << "\n";
+		
+		string fname = InstW->getFunction()->getName().str();
+                errs() << "fname:" << fname << "\n";
+		if (senFuncSet.find(fname) != senFuncSet.end()){
+                        errs() << "sen_func(for indirect_call):"<< fname << "\n";
+			errs() << "sensitive_indirect_call:" << sensitive_indirect_call_count++ << "\n";
+		}
+
 		indirect_call_file << "indirect_call" << " " << indirect_call_count++  << "\n"; 
 
 #endif
@@ -679,6 +704,18 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 
 	      //TODO: isIntrinsic or not? Consider intrinsics as common instructions for now, continue directly  
 	      if (callee->isIntrinsic() || callee->isDeclaration()){
+
+		if(systemcallSet.find(callee->getName().str()) != systemcallSet.end()){
+			errs() << "syscall: " << callee->getName() << " count:" << system_call_count++ << "\n";
+			string fname = InstW->getFunction()->getName().str();
+//	                errs() << "fname:" << fname << "\n";
+			if(senFuncSet.find(fname) != senFuncSet.end()){
+				errs() << "sen_func(for syscall):"<< fname << "\n";
+				errs() << "sensitive_syscall:" << sensitive_system_call_count++ << "\n";
+			}
+
+		}
+
 		//if it is a var_annotation, save the sensitive value by the way
 		if (callee->getIntrinsicID() == Intrinsic::var_annotation){
 		  Value* v = CI->getArgOperand(0);
@@ -812,6 +849,13 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 
   errs() << "\n\n PDG construction completed! ^_^\n\n";
   errs() << "funcs = " << funcs << "\n";
+
+  errs() << "total syscall:" << system_call_count << "\n";
+  errs() << "sensitive :" << sensitive_system_call_count << "\n";
+
+  errs() << "total indirect_call:" << indirect_call_count << "\n";
+  errs() << "sensitive :" << sensitive_indirect_call_count << "\n";
+
   errs() << "+++++++++++++++++++++++++++++++++++++++++++++\n";
 
   std::set<llvm::GlobalValue*> senGlobalSet;
