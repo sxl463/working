@@ -711,7 +711,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 //	                errs() << "fname:" << fname << "\n";
 			if(senFuncSet.find(fname) != senFuncSet.end()){
 				errs() << "sen_func(for syscall):"<< fname << "\n";
-				errs() << "sensitive_syscall:" << sensitive_system_call_count++ << "\n";
+				errs() << "sensitive_syscall:" << callee->getName().str() << " " << sensitive_system_call_count++ << "\n";
 			}
 
 		}
