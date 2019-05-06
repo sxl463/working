@@ -58,6 +58,9 @@
 #include <string.h>
 #include <time.h>
 
+
+#define COUNT_INDIRECT_AND_SYS_CALL 1
+
 using namespace std;
 using namespace cot;
 using namespace llvm;
@@ -481,20 +484,26 @@ string getTypeName(Type* ty){
   raw_string_ostream rso(type_str);
   rso << *ty;
 
-  /*
-  string temp_type_str = rso.str();
-  if (temp_type_str.find("struct.identity") != string::npos){
-    errs() << "temp_type_str: " << temp_type_str << "\n";
-    errs() << "in ty: " << *ty << "\n";
-  }
-
-  if (temp_type_str.find("struct.sshkey") != string::npos){
-    errs() << "temp_type_str_2: " << temp_type_str << "\n";
-    errs() << "in ty2: " << *ty << "\n";
-  }
-  */
   return rso.str();
 }
+
+
+std::set<string> systemcallSet;
+void readSystemCallTableFromFile(set<string>& S, string filename){
+  ifstream infile(filename);
+  string line;
+ 
+  if (!infile.is_open()){
+    errs() << "Fail to read CallSite, file can't be opened!\n ";
+    exit(0);
+  }
+
+  while(infile >> line)
+    S.insert(line);  
+}
+
+
+
 
 
 bool ProgramDependencyGraph::runOnModule(Module &M)
@@ -503,6 +512,19 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
   errs() << "ProgramDependencyGraph::runOnModule" << '\n';
   FunctionWrapper::constructFuncMap(M);
   errs() << "funcMap size = " << FunctionWrapper::funcMap.size() << '\n';
+
+#if COUNT_INDIRECT_AND_SYS_CALL
+  int indirect_call_count = 0;
+  int system_call_count = 0;
+  ofstream indirect_call_file;
+  ofstream system_call_file;
+  indirect_call_file.open("indirect_calls.txt");
+  system_call_file.open("system_calls.txt");
+
+
+  readSystemCallTableFromFile(systemcallSet, "linux_syscall_table.txt");
+  errs() << "systemcallSet size:" << systemcallSet.size() << "\n";
+#endif
 
   // Type preprocessing
     TypeFinder allTypes;
@@ -641,7 +663,13 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      //	%call = call i32 %1(i32 2))
 	      if (callee == nullptr){
 		Type* t = CI->getCalledValue()->getType();
-		errs() << "indirect call, called Type t = " << *t << "\n";
+		errs() << "indirect call:" << " " << indirect_call_count << " " << *t << "\n";
+
+
+#if COUNT_INDIRECT_AND_SYS_CALL
+		indirect_call_file << "indirect_call" << " " << indirect_call_count++  << "\n"; 
+
+#endif
 
 		FunctionType* funcTy = cast<FunctionType>(cast<PointerType>(t)->getElementType());
 		errs() << "after cast<FunctionType>, ft = " << *funcTy <<"\n";

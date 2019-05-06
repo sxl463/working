@@ -1,201 +1,472 @@
-0 $Prog 17
-set_defaults
-fail_exit
-open_files
-open_shadow
-grp_add
-usr_update
-create_home
-close_files
-tallylog_reset
+0 $hostname 4
+main
+parse_args
+lookup_hostname
+read_config
+1 $port 4
+main
+parse_args
+lookup_hostname
+read_config
+2 $cgi_pattern 3
+main
+parse_args
+read_config
+3 $cgi_limit 3
+main
+parse_args
+read_config
+4 $charset 3
+main
+parse_args
+read_config
+5 $p3p 3
+main
+parse_args
+read_config
+6 $max_age 3
+main
+parse_args
+read_config
+7 $max_connects 5
+main
+idle
+update_throttles
+shut_down
+handle_newconnect
+8 $stderr 8
+main
+lookup_hostname
+read_throttlefile
+no_value_required
+e_strdup
 usage
-get_groups
+read_config
+value_required
+9 $user 3
 main
-get_defaults
-process_flags
-faillog_reset
-lastlog_reset
-grp_update
-1 $user_groups 4
-get_groups
+parse_args
+read_config
+10 $numthrottles 4
 main
-process_flags
-grp_update
-2 $is_shadow_pwd 6
-open_shadow
-usr_update
-close_files
+read_throttlefile
+update_throttles
+check_throttles
+11 $maxthrottles 2
 main
-process_flags
-new_pwent
-3 $sys_ngroups 2
-get_groups
+read_throttlefile
+12 $throttles 8
 main
-4 $oflg 2
+read_throttlefile
+update_throttles
+shut_down
+handle_read
+handle_send
+clear_throttles
+check_throttles
+13 $throttlefile 3
 main
-process_flags
-5 $uflg 2
+parse_args
+read_config
+14 $logfile 4
 main
-process_flags
-6 $sub_uid_locked 3
-fail_exit
-open_files
-close_files
-7 $sub_gid_locked 3
-fail_exit
-open_files
-close_files
-8 $home_added 3
-fail_exit
-create_home
+parse_args
+re_open_logfile
+read_config
+15 $argv0 8
 main
-9 $prefix_user_home 4
-fail_exit
-create_home
-main
-process_flags
-10 $lflg 3
-usr_update
-main
-process_flags
-11 $def_inactive 5
-set_defaults
-show_defaults
-get_defaults
-process_flags
-new_spent
-12 $user_expire 2
-process_flags
-new_spent
-13 $do_grp_update 4
-grp_add
-usr_update
-close_files
-process_flags
-14 $spw_locked 3
-fail_exit
-open_shadow
-close_files
-15 $pw_locked 3
-fail_exit
-open_files
-close_files
-16 $gr_locked 3
-fail_exit
-open_files
-close_files
-17 $sgr_locked 3
-fail_exit
-open_files
-close_files
-18 $is_sub_gid 4
-open_files
-usr_update
-close_files
-main
-19 $Dflg 2
-main
-process_flags
-20 $gflg 2
-main
-process_flags
-21 $bflg 2
-main
-process_flags
-22 $is_shadow_grp 6
-open_files
-grp_add
-close_files
-main
-grp_update
-new_grent
-23 $rflg 3
-main
-process_flags
-new_spent
-24 $user_id 6
-usr_update
-create_home
-create_mail
-main
-process_flags
-new_pwent
-25 $is_sub_uid 4
-open_files
-usr_update
-close_files
-main
-26 $user_gid 8
-grp_add
-usr_update
-create_home
-create_mail
-main
-process_flags
-new_pwent
-new_grent
-27 $sub_uid_start 1
-usr_update
-28 $sub_uid_count 1
-usr_update
-29 $sub_gid_start 1
-usr_update
-30 $sub_gid_count 1
-usr_update
-31 $mflg 2
-main
-process_flags
-32 $fflg 2
-main
-process_flags
-33 $eflg 2
-main
-process_flags
-34 $sflg 2
-main
-process_flags
-35 $stderr 18
-set_defaults
-fail_exit
-open_files
-open_shadow
-grp_add
-usr_update
-create_home
-create_mail
-close_files
-tallylog_reset
+lookup_hostname
+read_throttlefile
+no_value_required
+e_strdup
 usage
-get_groups
+read_config
+value_required
+16 $terminate 1
 main
-get_defaults
-process_flags
-faillog_reset
-lastlog_reset
-grp_update
-36 $Uflg 2
+17 $stats_time 2
 main
-process_flags
-37 $optind 1
-process_flags
+logstats
+18 $start_time 2
+main
+logstats
+19 $stats_connections 3
+main
+handle_newconnect
+thttpd_logstats
+20 $stats_bytes 3
+main
+thttpd_logstats
+really_clear_connection
+21 $stats_simultaneous 3
+main
+handle_newconnect
+thttpd_logstats
+22 $connects 6
+main
+idle
+update_throttles
+shut_down
+handle_newconnect
+really_clear_connection
+23 $first_free_connect 3
+main
+handle_newconnect
+really_clear_connection
+24 $num_connects 4
+main
+handle_usr1
+handle_newconnect
+really_clear_connection
+25 $httpd_conn_count 4
+main
+shut_down
+handle_newconnect
+thttpd_logstats
+26 $count 1
+main
+27 $got_hup 2
+main
+handle_hup
+28 $got_usr1 2
+main
+handle_usr1
+29 $watchdog_flag 3
+main
+handle_alrm
+occasional
+30 $no_symlink_check 3
+main
+parse_args
+read_config
+31 $do_vhost 3
+main
+parse_args
+read_config
+32 $do_global_passwd 3
+main
+parse_args
+read_config
+33 $url_pattern 3
+main
+parse_args
+read_config
+34 $local_pattern 3
+main
+parse_args
+read_config
+35 $no_empty_referrers 3
+main
+parse_args
+read_config
+36 $hs 5
+main
+handle_chld
+shut_down
+re_open_logfile
+handle_newconnect
+37 $no_log 3
+main
+parse_args
+re_open_logfile
 38 $stdout 1
-usage
-39 $def_group 4
-set_defaults
-show_defaults
-get_defaults
-process_flags
-40 $optarg 1
-process_flags
-41 $cflg 1
-process_flags
-42 $dflg 1
-process_flags
-43 $Gflg 1
-process_flags
-44 $kflg 1
-process_flags
-45 $Mflg 1
-process_flags
-46 $Nflg 1
-process_flags
+main
+39 $do_chroot 3
+main
+parse_args
+read_config
+40 $data_dir 3
+main
+parse_args
+read_config
+41 $dir 3
+main
+parse_args
+read_config
+42 $debug 3
+main
+parse_args
+read_config
+43 $stdin 1
+main
+44 $pidfile 3
+main
+parse_args
+read_config
+45 $sub_process 5
+cgi
+cgi_child
+post_post_garbage_hack
+ls
+httpd_write_response
+46 $str_alloc_count 2
+httpd_logstats
+httpd_realloc_str
+47 $str_alloc_size 2
+httpd_logstats
+httpd_realloc_str
+48 $really_start_request.indexname 2
+really_start_request
+httpd_realloc_str
+49 $really_start_request.maxindexname 2
+really_start_request
+httpd_realloc_str
+50 $really_start_request.index_names 1
+really_start_request
+51 $really_start_request.dirname 2
+really_start_request
+httpd_realloc_str
+52 $really_start_request.maxdirname 2
+really_start_request
+httpd_realloc_str
+53 $enc_tab 2
+init_mime
+figure_mime
+54 $typ_tab 2
+init_mime
+figure_mime
+55 $httpd_initialize.ghnbuf 1
+httpd_initialize
+56 $httpd_ntoa.str 1
+httpd_ntoa
+57 $expand_symlinks.checked 2
+expand_symlinks
+httpd_realloc_str
+58 $expand_symlinks.rest 2
+expand_symlinks
+httpd_realloc_str
+59 $expand_symlinks.maxchecked 2
+expand_symlinks
+httpd_realloc_str
+60 $expand_symlinks.maxrest 2
+expand_symlinks
+httpd_realloc_str
+61 $vhost_map.tempfilename 2
+vhost_map
+httpd_realloc_str
+62 $vhost_map.maxtempfilename 2
+vhost_map
+httpd_realloc_str
+63 $nfiles 9
+fdwatch_get_nfiles
+fdwatch_add_fd
+fdwatch_del_fd
+fdwatch_check_fd
+fdwatch_get_next_client_data
+poll_add_fd
+poll_del_fd
+poll_check_fd
+poll_get_fd
+64 $nwatches 3
+fdwatch_get_nfiles
+fdwatch
+fdwatch_logstats
+65 $fd_rw 5
+fdwatch_get_nfiles
+fdwatch_add_fd
+fdwatch_del_fd
+fdwatch_check_fd
+poll_check_fd
+66 $fd_data 4
+fdwatch_get_nfiles
+fdwatch_add_fd
+fdwatch_del_fd
+fdwatch_get_next_client_data
+67 $nreturned 2
+fdwatch
+fdwatch_get_next_client_data
+68 $next_ridx 2
+fdwatch
+fdwatch_get_next_client_data
+69 $poll_rfdidx 3
+poll_init
+poll_watch
+poll_get_fd
+70 $poll_fdidx 4
+poll_init
+poll_add_fd
+poll_del_fd
+poll_check_fd
+71 $pollfds 5
+poll_init
+poll_add_fd
+poll_del_fd
+poll_watch
+poll_check_fd
+72 $npoll_fds 3
+poll_add_fd
+poll_del_fd
+poll_watch
+73 $free_maps 4
+mmc_map
+mmc_cleanup
+mmc_term
+really_unmap
+74 $free_count 5
+mmc_map
+mmc_cleanup
+mmc_term
+mmc_logstats
+really_unmap
+75 $alloc_count 4
+mmc_map
+mmc_cleanup
+mmc_term
+mmc_logstats
+76 $maps 5
+mmc_map
+mmc_unmap
+mmc_term
+check_hash_size
+really_unmap
+77 $map_count 5
+mmc_map
+mmc_cleanup
+mmc_logstats
+check_hash_size
+really_unmap
+78 $mapped_bytes 4
+mmc_map
+mmc_cleanup
+mmc_logstats
+really_unmap
+79 $expire_age 2
+mmc_cleanup
+mmc_logstats
+80 $hash_size 4
+mmc_logstats
+check_hash_size
+find_hash
+add_hash
+81 $hash_mask 4
+check_hash_size
+find_hash
+add_hash
+hash
+82 $hash_table 4
+check_hash_size
+find_hash
+add_hash
+really_unmap
+83 $timers 6
+tmr_term
+l_add
+tmr_init
+tmr_mstimeout
+tmr_run
+l_remove
+84 $free_timers 4
+tmr_init
+tmr_create
+tmr_cancel
+tmr_cleanup
+85 $free_count597 5
+tmr_logstats
+tmr_init
+tmr_create
+tmr_cancel
+tmr_cleanup
+86 $active_count 4
+tmr_logstats
+tmr_init
+tmr_create
+tmr_cancel
+87 $alloc_count598 4
+tmr_logstats
+tmr_init
+tmr_create
+tmr_cleanup
+88 $tmr_timeout.timeout 1
+tmr_timeout
+89 $JunkClientData 1
+main
+90 $tm_to_time.monthtab 1
+tm_to_time
+91 $make_envp.envp 1
+make_envp
+92 $build_env.buf 2
+build_env
+httpd_realloc_str
+93 $build_env.maxbuf 2
+build_env
+httpd_realloc_str
+94 $ls.maxnames 1
+ls
+95 $ls.names 1
+ls
+96 $ls.nameptrs 1
+ls
+97 $ls.name 2
+ls
+httpd_realloc_str
+98 $ls.maxname 2
+ls
+httpd_realloc_str
+99 $ls.rname 2
+ls
+httpd_realloc_str
+100 $ls.maxrname 2
+ls
+httpd_realloc_str
+101 $ls.encrname 2
+ls
+httpd_realloc_str
+102 $ls.maxencrname 2
+ls
+httpd_realloc_str
+103 $really_check_referrer.refhost 2
+really_check_referrer
+httpd_realloc_str
+104 $really_check_referrer.refhost_size 2
+really_check_referrer
+httpd_realloc_str
+105 $auth_check2.authpath 2
+auth_check2
+httpd_realloc_str
+106 $auth_check2.maxauthpath 2
+auth_check2
+httpd_realloc_str
+107 $auth_check2.prevauthpath 2
+auth_check2
+httpd_realloc_str
+108 $auth_check2.maxprevauthpath 2
+auth_check2
+httpd_realloc_str
+109 $auth_check2.prevmtime 1
+auth_check2
+110 $auth_check2.prevuser 2
+auth_check2
+httpd_realloc_str
+111 $auth_check2.maxprevuser 2
+auth_check2
+httpd_realloc_str
+112 $auth_check2.prevcryp 2
+auth_check2
+httpd_realloc_str
+113 $auth_check2.maxprevcryp 2
+auth_check2
+httpd_realloc_str
+114 $b64_decode_table 1
+b64_decode
+115 $send_authenticate.header 2
+send_authenticate
+httpd_realloc_str
+116 $send_authenticate.maxheader 2
+send_authenticate
+httpd_realloc_str
+117 $send_dirredirect.location 2
+send_dirredirect
+httpd_realloc_str
+118 $send_dirredirect.header 2
+send_dirredirect
+httpd_realloc_str
+119 $send_dirredirect.maxlocation 2
+send_dirredirect
+httpd_realloc_str
+120 $send_dirredirect.maxheader 2
+send_dirredirect
+httpd_realloc_str
+121 $scan_wday.sorted 1
+scan_wday
+122 $scan_mon.sorted 1
+scan_mon

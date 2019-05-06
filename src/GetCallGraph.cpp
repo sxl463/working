@@ -628,11 +628,11 @@ void input_output_filename_init(string program_name, ProgramConfig& pconfig){
       pconfig.source_funcname = "update_shell";
       break;
     case CHAGE:
-      pconfig.source_funcname = "get_defaults";
+      pconfig.source_funcname = "chage_get_user_fields";
       break;
 
     case PASSWD:
-      pconfig.source_funcname = "new_password";
+      pconfig.source_funcname = "passwd_core";
       break;
 
     case USERADD:
@@ -665,7 +665,9 @@ struct GetCallGraph : public ModulePass {
   bool runOnModule(Module &M) {
 
     ProgramConfig pconfig;
-    string program_name = "useradd";
+ 
+    // now we are processing chage
+    string program_name = "chage";
 
     input_output_filename_init(program_name, pconfig);
 
