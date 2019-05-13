@@ -612,7 +612,7 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
       }
 
       funcs++;//label this author-defined function
-      errs() << "PDG " << 1.0*funcs/M.getFunctionList().size()*100 << "% completed\n";
+      // errs() << "PDG " << 1.0*funcs/M.getFunctionList().size()*100 << "% completed\n";
 
       //find all Load/Store instructions for each F, insert to F's storeInstList and loadInstList
       for(inst_iterator I = inst_begin(F), IE = inst_end(F); I != IE; ++I){
@@ -683,21 +683,22 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 		Type* t = CI->getCalledValue()->getType();
 
 #if COUNT_INDIRECT_AND_SYS_CALL
-		errs() << "indirect call:" << " " << indirect_call_count << " " << *t << "\n";
+//		errs() << "indirect call:" << " " << indirect_call_count << " " << *t << "\n";
 		
-		string fname = InstW->getFunction()->getName().str();
-                errs() << "fname:" << fname << "\n";
-		if (senFuncSet.find(fname) != senFuncSet.end()){
-                        errs() << "sen_func(for indirect_call):"<< fname << "\n";
-			errs() << "sensitive_indirect_call:" << sensitive_indirect_call_count++ << "\n";
-		}
+//		string fname = InstW->getFunction()->getName().str();
+//                errs() << "fname:" << fname << "\n";
 
-		indirect_call_file << "indirect_call" << " " << indirect_call_count++  << "\n"; 
+//		if (senFuncSet.find(fname) != senFuncSet.end()){
+//                        errs() << "sen_func(for indirect_call):"<< fname << "\n";
+//			errs() << "sensitive_indirect_call:" << sensitive_indirect_call_count++ << "\n";
+//		}
+
+//		indirect_call_file << "indirect_call" << " " << indirect_call_count++  << "\n"; 
 
 #endif
 
 		FunctionType* funcTy = cast<FunctionType>(cast<PointerType>(t)->getElementType());
-		errs() << "after cast<FunctionType>, ft = " << *funcTy <<"\n";
+		// errs() << "after cast<FunctionType>, ft = " << *funcTy <<"\n";
 		connectAllPossibleFunctions(InstW, funcTy);
 		continue;
 	      }
@@ -706,12 +707,14 @@ bool ProgramDependencyGraph::runOnModule(Module &M)
 	      if (callee->isIntrinsic() || callee->isDeclaration()){
 
 		if(systemcallSet.find(callee->getName().str()) != systemcallSet.end()){
-			errs() << "syscall: " << callee->getName() << " count:" << system_call_count++ << "\n";
+			// errs() << "syscall: " << callee->getName() << " count:" << system_call_count++ << "\n";
+                        system_call_count++;
 			string fname = InstW->getFunction()->getName().str();
 //	                errs() << "fname:" << fname << "\n";
 			if(senFuncSet.find(fname) != senFuncSet.end()){
-				errs() << "sen_func(for syscall):"<< fname << "\n";
-				errs() << "sensitive_syscall:" << callee->getName().str() << " " << sensitive_system_call_count++ << "\n";
+				// errs() << "sensitive_syscall:"<< fname << "\n";
+				errs() << sensitive_system_call_count++ << " " 
+				       << fname << " --> " << callee->getName().str() << "\n";
 			}
 
 		}
